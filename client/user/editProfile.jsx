@@ -9,6 +9,8 @@ import Icon from '@material-ui/core/Icon';
 import CardActions from '@material-ui/core/CardActions';
 import Button from '@material-ui/core/Button';
 import { withStyles } from '@material-ui/core/styles';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
 import auth from '../auth/auth-helper';
 import { update, read } from './api-user';
 
@@ -36,6 +38,10 @@ const styles = (theme) => ({
     margin: 'auto',
     marginBottom: theme.spacing(2),
   },
+  subheading: {
+    marginTop: theme.spacing(2),
+    color: theme.palette.openTitle,
+  },
 });
 
 class EditProfile extends Component {
@@ -46,6 +52,7 @@ class EditProfile extends Component {
       name: '',
       email: '',
       password: '',
+      seller: false,
       redirectToProfile: false,
       error: '',
     };
@@ -76,6 +83,7 @@ class EditProfile extends Component {
       name: this.state.name || undefined,
       email: this.state.email || undefined,
       password: this.state.password || undefined,
+      seller: this.state.seller,
     };
     update(
       {
@@ -89,9 +97,11 @@ class EditProfile extends Component {
       if (data.error) {
         this.setState({ error: data.error });
       } else {
-        this.setState({
-          userId: data._id,
-          redirectToProfile: true,
+        auth.updateUser(data, () => {
+          this.setState({
+            userId: data._id,
+            redirectToProfile: true,
+          });
         });
       }
     });
@@ -99,6 +109,10 @@ class EditProfile extends Component {
 
   handleChange = (name) => (event) => {
     this.setState({ [name]: event.target.value });
+  };
+
+  handleCheck = (event, checked) => {
+    this.setState({ seller: checked });
   };
 
   render() {
@@ -146,7 +160,29 @@ class EditProfile extends Component {
               onChange={this.handleChange('password')}
               margin="normal"
             />
-            <br />{' '}
+            <br />
+            <Typography
+              type="subheading"
+              component="h4"
+              className={classes.subheading}
+            >
+              Seller Account
+            </Typography>
+            <FormControlLabel
+              control={(
+                <Switch
+                  classes={{
+                    checked: classes.checked,
+                    bar: classes.bar,
+                  }}
+                  checked={this.state.seller}
+                  onChange={this.handleCheck}
+                />
+              )}
+              label={
+                this.state.seller ? 'Active' : 'Inactive'
+              }
+            />
             {this.state.error && (
               <Typography component="p" color="error">
                 <Icon

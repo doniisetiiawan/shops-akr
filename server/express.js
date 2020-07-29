@@ -12,11 +12,11 @@ import {
   createMuiTheme,
   MuiThemeProvider,
 } from '@material-ui/core';
-import indigo from '@material-ui/core/colors/indigo';
-import pink from '@material-ui/core/colors/pink';
 import ReactDOMServer from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom';
 import React from 'react';
+import blueGrey from '@material-ui/core/colors/blueGrey';
+import lightGreen from '@material-ui/core/colors/lightGreen';
 import Template from '../template';
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
@@ -51,19 +51,19 @@ app.get('*', (req, res) => {
   const theme = createMuiTheme({
     palette: {
       primary: {
-        light: '#757de8',
-        main: '#3f51b5',
-        dark: '#002984',
+        light: '#8eacbb',
+        main: '#607d8b',
+        dark: '#34515e',
         contrastText: '#fff',
       },
       secondary: {
-        light: '#ff79b0',
-        main: '#ff4081',
-        dark: '#c60055',
+        light: '#e7ff8c',
+        main: '#b2ff59',
+        dark: '#7ecb20',
         contrastText: '#000',
       },
-      openTitle: indigo['400'],
-      protectedTitle: pink['400'],
+      openTitle: blueGrey['400'],
+      protectedTitle: lightGreen['400'],
       type: 'light',
     },
   });

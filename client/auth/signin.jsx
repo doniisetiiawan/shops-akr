@@ -112,7 +112,7 @@ class Signin extends Component {
               onChange={this.handleChange('password')}
               margin="normal"
             />
-            <br />{' '}
+            <br />
             {this.state.error && (
               <Typography component="p" color="error">
                 <Icon

@@ -5,12 +5,21 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import { Link, withRouter } from 'react-router-dom';
 import IconButton from '@material-ui/core/IconButton';
-import { Home as HomeIcon } from '@material-ui/icons';
+import {
+  Home as HomeIcon,
+  ShoppingCart as CartIcon,
+} from '@material-ui/icons';
 import Button from '@material-ui/core/Button';
+import Badge from '@material-ui/core/Badge';
 import auth from '../auth/auth-helper';
 
 const isActive = (history, path) => {
-  if (history.location.pathname === path) return { color: '#ff4081' };
+  if (history.location.pathname === path) return { color: '#bef67a' };
+  return { color: '#ffffff' };
+};
+
+const isPartActive = (history, path) => {
+  if (history.location.pathname.includes(path)) return { color: '#bef67a' };
   return { color: '#ffffff' };
 };
 
@@ -20,7 +29,7 @@ function Menu(props) {
       <AppBar position="static">
         <Toolbar>
           <Typography type="title" color="inherit">
-            MERN Skeleton
+            MERN Marketplace
           </Typography>
           <Link to="/">
             <IconButton
@@ -30,61 +39,99 @@ function Menu(props) {
               <HomeIcon />
             </IconButton>
           </Link>
-          <Link to="/users">
+          <Link to="/shops/all">
             <Button
-              style={isActive(props.history, '/users')}
+              style={isActive(props.history, '/shops/all')}
             >
-              Users
+              All Shops
+            </Button>
+          </Link>
+          <Link to="/cart">
+            <Button
+              style={isActive(props.history, '/cart')}
+            >
+              Cart
+              <Badge
+                color="secondary"
+                badgeContent={7}
+                style={{ marginLeft: '7px' }}
+              >
+                <CartIcon />
+              </Badge>
             </Button>
           </Link>
 
-          {!auth.isAuthenticated() && (
-            <span>
-              <Link to="/signup">
-                <Button
-                  style={isActive(props.history, '/signup')}
-                >
-                  Sign Up
-                </Button>
-              </Link>
-              <Link to="/signin">
-                <Button
-                  style={isActive(props.history, '/signin')}
-                >
-                  Sign In
-                </Button>
-              </Link>
-            </span>
-          )}
+          <div
+            style={{ position: 'absolute', right: '10px' }}
+          >
+            <span style={{ float: 'right' }}>
+              {!auth.isAuthenticated() && (
+                <span>
+                  <Link to="/signup">
+                    <Button
+                      style={isActive(
+                        props.history,
+                        '/signup',
+                      )}
+                    >
+                      Sign Up
+                    </Button>
+                  </Link>
+                  <Link to="/signin">
+                    <Button
+                      style={isActive(
+                        props.history,
+                        '/signin',
+                      )}
+                    >
+                      Sign In
+                    </Button>
+                  </Link>
+                </span>
+              )}
 
-          {auth.isAuthenticated() && (
-            <span>
-              <Link
-                to={`/user/${
-                  auth.isAuthenticated().user._id
-                }`}
-              >
-                <Button
-                  style={isActive(
-                    props.history,
-                    `/user/${
-                      auth.isAuthenticated().user._id
-                    }`,
+              {auth.isAuthenticated() && (
+                <span>
+                  {auth.isAuthenticated().user.seller && (
+                    <Link to="/seller/shops">
+                      <Button
+                        style={isPartActive(
+                          props.history,
+                          '/seller/',
+                        )}
+                      >
+                        My Shops
+                      </Button>
+                    </Link>
                   )}
-                >
-                  My Profile
-                </Button>
-              </Link>
-              <Button
-                color="inherit"
-                onClick={() => {
-                  auth.signout(() => props.history.push('/'));
-                }}
-              >
-                Sign out
-              </Button>
+                  <Link
+                    to={`/user/${
+                      auth.isAuthenticated().user._id
+                    }`}
+                  >
+                    <Button
+                      style={isActive(
+                        props.history,
+                        `/user/${
+                          auth.isAuthenticated().user._id
+                        }`,
+                      )}
+                    >
+                      My Profile
+                    </Button>
+                  </Link>
+                  <Button
+                    color="inherit"
+                    onClick={() => {
+                      auth.signout(() => props.history.push('/'));
+                    }}
+                  >
+                    Sign out
+                  </Button>
+                </span>
+              )}
             </span>
-          )}
+          </div>
         </Toolbar>
       </AppBar>
     </>
