@@ -72,6 +72,7 @@ class EditProfile extends Component {
         this.setState({
           name: data.name,
           email: data.email,
+          seller: data.seller,
         });
       }
     });
