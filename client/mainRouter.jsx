@@ -9,6 +9,8 @@ import PrivateRoute from './auth/PrivateRoute';
 import EditProfile from './user/editProfile';
 import Menu from './core/menu';
 import NewShop from './shop/newShop';
+import Shops from './shop/shops';
+import MyShops from './shop/myShops';
 
 class MainRouter extends React.Component {
   componentDidMount = () => {
@@ -35,6 +37,9 @@ class MainRouter extends React.Component {
           />
           <Route path="/user/:userId" component={Profile} />
 
+          <Route path="/shops/all" component={Shops} />
+
+          <PrivateRoute path="/seller/shops" component={MyShops} />
           <PrivateRoute
             path="/seller/shop/new"
             component={NewShop}
