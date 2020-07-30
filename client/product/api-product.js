@@ -9,6 +9,12 @@ const create = (params, credentials, product) => fetch(`/api/products/by/${param
   .then((response) => response.json())
   .catch((err) => console.log(err));
 
+const read = (params) => fetch(`/api/products/${params.productId}`, {
+  method: 'GET',
+})
+  .then((response) => response.json())
+  .catch((err) => console.log(err));
+
 const listByShop = (params) => fetch(`/api/products/by/${params.shopId}`, {
   method: 'GET',
 })
@@ -23,4 +29,16 @@ const listLatest = () => fetch('/api/products/latest', {
   .then((response) => response.json())
   .catch((err) => console.log(err));
 
-export { create, listByShop, listLatest };
+const listRelated = (params) => fetch(`/api/products/related/${params.productId}`, {
+  method: 'GET',
+})
+  .then((response) => response.json())
+  .catch((err) => console.log(err));
+
+export {
+  create,
+  listByShop,
+  listLatest,
+  read,
+  listRelated,
+};

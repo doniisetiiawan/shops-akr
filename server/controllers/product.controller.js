@@ -45,6 +45,11 @@ const productByID = (req, res, next, id) => {
     });
 };
 
+const read = (req, res) => {
+  req.product.image = undefined;
+  return res.json(req.product);
+};
+
 const listByShop = (req, res) => {
   Product.find({ shop: req.shop._id }, (err, products) => {
     if (err) {
@@ -96,4 +101,5 @@ export default {
   listLatest,
   productByID,
   listRelated,
+  read,
 };

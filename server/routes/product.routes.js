@@ -24,6 +24,10 @@ router
   .route('/api/products/related/:productId')
   .get(productCtrl.listRelated);
 
+router
+  .route('/api/products/:productId')
+  .get(productCtrl.read);
+
 router.param('shopId', shopCtrl.shopByID);
 router.param('productId', productCtrl.productByID);
 
