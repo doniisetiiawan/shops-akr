@@ -7,6 +7,7 @@ import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Card from '@material-ui/core/Card';
 import { read } from './api-shop';
+import Products from '../product/products';
 
 const styles = (theme) => ({
   root: {
@@ -98,6 +99,21 @@ class Shop extends Component {
                 </Typography>
                 <br />
               </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={8} sm={8}>
+            <Card>
+              <Typography
+                type="title"
+                component="h2"
+                className={classes.productTitle}
+              >
+                Products
+              </Typography>
+              <Products
+                products={this.state.products}
+                searched={false}
+              />
             </Card>
           </Grid>
         </Grid>

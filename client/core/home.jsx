@@ -1,54 +1,55 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import Card from '@material-ui/core/Card';
-import Typography from '@material-ui/core/Typography';
-import CardMedia from '@material-ui/core/CardMedia';
-import CardContent from '@material-ui/core/CardContent';
 import { withStyles } from '@material-ui/core/styles';
-import seashellImg from '../assets/images/seashell.jpg';
+import Grid from '@material-ui/core/Grid';
+import Suggestions from '../product/suggestions';
+import { listLatest } from '../product/api-product';
 
-const styles = (theme) => ({
-  card: {
-    maxWidth: 600,
-    margin: 'auto',
-    marginTop: theme.spacing(5),
-  },
-  title: {
-    padding: `${theme.spacing(3)}px ${theme.spacing(2.5)}px
-${theme.spacing(2)}px`,
-    color: theme.palette.text.secondary,
-  },
-  media: {
-    minHeight: 330,
+const styles = () => ({
+  root: {
+    flexGrow: 1,
+    margin: 30,
   },
 });
 
-function Home(props) {
-  const { classes } = props;
+class Home extends React.Component {
+  constructor(props) {
+    super(props);
 
-  return (
-    <>
-      <Card className={classes.card}>
-        <Typography
-          type="headline"
-          component="h2"
-          className={classes.title}
-        >
-          Home Page
-        </Typography>
-        <CardMedia
-          className={classes.media}
-          image={seashellImg}
-          title="Unicorn Shells"
-        />
-        <CardContent>
-          <Typography type="body1" component="p">
-            Welcome to the Mern Skeleton home page
-          </Typography>
-        </CardContent>
-      </Card>
-    </>
-  );
+    this.state = {
+      suggestionTitle: 'Latest Products', suggestions: [],
+    };
+  }
+
+  componentDidMount = () => {
+    listLatest().then((data) => {
+      if (data.error) {
+        console.log(data.error);
+      } else {
+        this.setState({ suggestions: data });
+      }
+    });
+  }
+
+  render() {
+    const { classes } = this.props;
+
+    return (
+      <div className={classes.root}>
+        <Grid container spacing={1}>
+          <Grid item xs={8} sm={8}>
+            aaa
+          </Grid>
+          <Grid item xs={4} sm={4}>
+            <Suggestions
+              products={this.state.suggestions}
+              title={this.state.suggestionTitle}
+            />
+          </Grid>
+        </Grid>
+      </div>
+    );
+  }
 }
 
 export default withStyles(styles)(Home);

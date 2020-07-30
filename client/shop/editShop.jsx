@@ -14,6 +14,7 @@ import CardActions from '@material-ui/core/CardActions';
 import { Redirect } from 'react-router-dom';
 import auth from '../auth/auth-helper';
 import { read, update } from './api-shop';
+import MyProducts from '../product/myProducts';
 
 const styles = (theme) => ({
   root: {
@@ -128,7 +129,7 @@ class EditShop extends Component {
       }?${new Date().getTime()}`
       : '/api/shops/defaultphoto';
     if (this.state.redirect) {
-      return (<Redirect to="/seller/shops" />);
+      return <Redirect to="/seller/shops" />;
     }
     const { classes } = this.props;
 
@@ -222,6 +223,11 @@ class EditShop extends Component {
                 </Button>
               </CardActions>
             </Card>
+          </Grid>
+          <Grid item xs={6} sm={6}>
+            <MyProducts
+              shopId={this.props.match.params.shopId}
+            />
           </Grid>
         </Grid>
       </div>

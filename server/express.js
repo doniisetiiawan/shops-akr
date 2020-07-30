@@ -21,6 +21,7 @@ import Template from '../template';
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
 import shopRoutes from './routes/shop.routes';
+import productRoutes from './routes/product.routes';
 import MainRouter from '../client/mainRouter';
 
 // comment out before building for production
@@ -47,6 +48,7 @@ app.use(
 app.use('/', userRoutes);
 app.use('/', authRoutes);
 app.use('/', shopRoutes);
+app.use('/', productRoutes);
 
 app.get('*', (req, res) => {
   const sheetsRegistry = new SheetsRegistry();
