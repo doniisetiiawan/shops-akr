@@ -169,6 +169,23 @@ const list = (req, res) => {
     .select('-image');
 };
 
+const decreaseQuantity = (req, res, next) => {
+  const bulkOps = req.body.order.products.map((item) => ({
+    updateOne: {
+      filter: { _id: item.product._id },
+      update: { $inc: { quantity: -item.quantity } },
+    },
+  }));
+  Product.bulkWrite(bulkOps, {}, (err) => {
+    if (err) {
+      return res.status(400).json({
+        error: 'Could not update product',
+      });
+    }
+    next();
+  });
+};
+
 export default {
   create,
   listByShop,
@@ -180,4 +197,5 @@ export default {
   remove,
   listCategories,
   list,
+  decreaseQuantity,
 };

@@ -22,6 +22,7 @@ import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
 import shopRoutes from './routes/shop.routes';
 import productRoutes from './routes/product.routes';
+import orderRoutes from './routes/order.routes';
 import MainRouter from '../client/mainRouter';
 
 // comment out before building for production
@@ -49,6 +50,7 @@ app.use('/', userRoutes);
 app.use('/', authRoutes);
 app.use('/', shopRoutes);
 app.use('/', productRoutes);
+app.use('/', orderRoutes);
 
 app.get('*', (req, res) => {
   const sheetsRegistry = new SheetsRegistry();
