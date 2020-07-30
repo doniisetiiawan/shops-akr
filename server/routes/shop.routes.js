@@ -24,6 +24,13 @@ router
     shopCtrl.isOwner,
     shopCtrl.update,
   );
+router
+  .route('/api/shops/:shopId')
+  .delete(
+    authCtrl.requireSignin,
+    shopCtrl.isOwner,
+    shopCtrl.remove,
+  );
 
 router
   .route('/api/shops/by/:userId')

@@ -17,6 +17,7 @@ import Paper from '@material-ui/core/Paper';
 import List from '@material-ui/core/List';
 import auth from '../auth/auth-helper';
 import { listByOwner } from './api-shop';
+import DeleteShop from './deleteShop';
 
 const styles = (theme) => ({
   root: theme.mixins.gutters({
@@ -132,10 +133,10 @@ class MyShops extends Component {
                             <Edit />
                           </IconButton>
                         </Link>
-                        {/* <DeleteShop */}
-                        {/*  shop={shop} */}
-                        {/*  onRemove={this.removeShop} */}
-                        {/* /> */}
+                        <DeleteShop
+                          shop={shop}
+                          onRemove={this.removeShop}
+                        />
                       </ListItemSecondaryAction>
                   )}
                 </ListItem>
