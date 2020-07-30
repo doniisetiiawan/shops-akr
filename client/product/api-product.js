@@ -1,3 +1,5 @@
+import queryString from 'query-string';
+
 const create = (params, credentials, product) => fetch(`/api/products/by/${params.shopId}`, {
   method: 'POST',
   headers: {
@@ -67,6 +69,21 @@ const listRelated = (params) => fetch(`/api/products/related/${params.productId}
   .then((response) => response.json())
   .catch((err) => console.log(err));
 
+const listCategories = () => fetch('/api/products/categories', {
+  method: 'GET',
+})
+  .then((response) => response.json())
+  .catch((err) => console.log(err));
+
+const list = (params) => {
+  const query = queryString.stringify(params);
+  return fetch(`/api/products?${query}`, {
+    method: 'GET',
+  })
+    .then((response) => response.json())
+    .catch((err) => console.log(err));
+};
+
 export {
   create,
   listByShop,
@@ -75,4 +92,6 @@ export {
   listRelated,
   update,
   remove,
+  list,
+  listCategories,
 };

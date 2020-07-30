@@ -137,6 +137,38 @@ const listRelated = (req, res) => {
     });
 };
 
+const listCategories = (req, res) => {
+  Product.distinct('category', {}, (err, products) => {
+    if (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err),
+      });
+    }
+    res.json(products);
+  });
+};
+
+const list = (req, res) => {
+  const query = {};
+  if (req.query.search) {
+    query.name = {
+      $regex: req.query.search,
+      $options: 'i',
+    };
+  }
+  if (req.query.category && req.query.category != 'All') query.category = req.query.category;
+  Product.find(query, (err, products) => {
+    if (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err),
+      });
+    }
+    res.json(products);
+  })
+    .populate('shop', '_id name')
+    .select('-image');
+};
+
 export default {
   create,
   listByShop,
@@ -146,4 +178,6 @@ export default {
   read,
   update,
   remove,
+  listCategories,
+  list,
 };
