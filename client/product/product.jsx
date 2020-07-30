@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import Icon from '@material-ui/core/Icon';
 import { read, listRelated } from './api-product';
 import Suggestions from './suggestions';
+import AddToCart from '../cart/addToCart';
 
 const styles = (theme) => ({
   root: {
@@ -120,8 +121,10 @@ class Product extends Component {
                 }
                 action={(
                   <span className={classes.action}>
-                    {/* <AddToCart cartStyle={classes.addCart} item={this.state.product} /> */}
-                    aa
+                    <AddToCart
+                      cartStyle={classes.addCart}
+                      item={this.state.product}
+                    />
                   </span>
                 )}
               />

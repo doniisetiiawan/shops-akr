@@ -16,6 +16,7 @@ import EditShop from './shop/editShop';
 import NewProduct from './product/newProduct';
 import Product from './product/product';
 import EditProduct from './product/editProduct';
+import Cart from './cart/cart';
 
 class MainRouter extends React.Component {
   componentDidMount = () => {
@@ -42,6 +43,7 @@ class MainRouter extends React.Component {
           />
           <Route path="/user/:userId" component={Profile} />
 
+          <Route path="/cart" component={Cart} />
           <Route
             path="/product/:productId"
             component={Product}

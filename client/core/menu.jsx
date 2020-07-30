@@ -12,6 +12,7 @@ import {
 import Button from '@material-ui/core/Button';
 import Badge from '@material-ui/core/Badge';
 import auth from '../auth/auth-helper';
+import cart from '../cart/cart-helper';
 
 const isActive = (history, path) => {
   if (history.location.pathname === path) return { color: '#bef67a' };
@@ -53,7 +54,7 @@ function Menu(props) {
               Cart
               <Badge
                 color="secondary"
-                badgeContent={7}
+                badgeContent={cart.itemTotal()}
                 style={{ marginLeft: '7px' }}
               >
                 <CartIcon />
