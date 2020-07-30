@@ -8,6 +8,7 @@ import Grid from '@material-ui/core/Grid';
 import Card from '@material-ui/core/Card';
 import { read } from './api-shop';
 import Products from '../product/products';
+import { listByShop } from '../product/api-product';
 
 const styles = (theme) => ({
   root: {
@@ -52,7 +53,20 @@ class Shop extends Component {
     };
   }
 
+  loadProducts = () => {
+    listByShop({
+      shopId: this.props.match.params.shopId,
+    }).then((data) => {
+      if (data.error) {
+        this.setState({ error: data.error });
+      } else {
+        this.setState({ products: data });
+      }
+    });
+  };
+
   componentDidMount = () => {
+    this.loadProducts();
     read({
       shopId: this.props.match.params.shopId,
     }).then((data) => {

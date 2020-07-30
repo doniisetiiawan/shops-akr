@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types,react/no-array-index-key */
+/* eslint-disable react/prop-types,react/no-array-index-key,react/no-access-state-in-setstate */
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
@@ -11,9 +11,10 @@ import ListItem from '@material-ui/core/ListItem';
 import CardMedia from '@material-ui/core/CardMedia';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import IconButton from '@material-ui/core/IconButton';
-import { AttachFile as FileUpload, Edit } from '@material-ui/icons';
+import { Edit } from '@material-ui/icons';
 import Divider from '@material-ui/core/Divider';
 import { listByShop } from './api-product';
+import DeleteProduct from './deleteProduct';
 
 const styles = (theme) => ({
   products: {
@@ -67,6 +68,13 @@ class MyProducts extends Component {
 
   componentDidMount = () => {
     this.loadProducts();
+  };
+
+  removeProduct = (product) => {
+    const updatedProducts = this.state.products;
+    const index = updatedProducts.indexOf(product);
+    updatedProducts.splice(index, 1);
+    this.setState({ shops: updatedProducts });
   };
 
   render() {
@@ -133,11 +141,11 @@ class MyProducts extends Component {
                         <Edit />
                       </IconButton>
                     </Link>
-                    {/* <DeleteProduct */}
-                    {/*  product={product} */}
-                    {/*  shopId={this.props.shopId} */}
-                    {/*  onRemove={this.removeProduct} */}
-                    {/* /> */}
+                    <DeleteProduct
+                      product={product}
+                      shopId={this.props.shopId}
+                      onRemove={this.removeProduct}
+                    />
                   </ListItemSecondaryAction>
                 </ListItem>
                 <Divider />

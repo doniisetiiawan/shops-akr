@@ -15,6 +15,7 @@ import Shop from './shop/shop';
 import EditShop from './shop/editShop';
 import NewProduct from './product/newProduct';
 import Product from './product/product';
+import EditProduct from './product/editProduct';
 
 class MainRouter extends React.Component {
   componentDidMount = () => {
@@ -63,6 +64,10 @@ class MainRouter extends React.Component {
           <PrivateRoute
             path="/seller/:shopId/products/new"
             component={NewProduct}
+          />
+          <PrivateRoute
+            path="/seller/:shopId/:productId/edit"
+            component={EditProduct}
           />
         </Switch>
       </>

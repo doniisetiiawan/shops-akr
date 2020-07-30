@@ -1,5 +1,6 @@
 import formidable from 'formidable';
 import fs from 'fs';
+import _ from 'lodash';
 import Product from '../models/product.model';
 import errorHandler from '../helpers/dbErrorHandler';
 
@@ -48,6 +49,47 @@ const productByID = (req, res, next, id) => {
 const read = (req, res) => {
   req.product.image = undefined;
   return res.json(req.product);
+};
+
+const update = (req, res) => {
+  const form = new formidable.IncomingForm();
+  form.keepExtensions = true;
+  form.parse(req, (err, fields, files) => {
+    if (err) {
+      return res.status(400).json({
+        message: 'Photo could not be uploaded',
+      });
+    }
+    let { product } = req;
+    product = _.extend(product, fields);
+    product.updated = Date.now();
+    if (files.image) {
+      product.image.data = fs.readFileSync(
+        files.image.path,
+      );
+      product.image.contentType = files.image.type;
+    }
+    product.save((err, result) => {
+      if (err) {
+        return res.status(400).send({
+          error: errorHandler.getErrorMessage(err),
+        });
+      }
+      res.json(result);
+    });
+  });
+};
+
+const remove = (req, res) => {
+  const { product } = req;
+  product.remove((err, deletedProduct) => {
+    if (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err),
+      });
+    }
+    res.json(deletedProduct);
+  });
 };
 
 const listByShop = (req, res) => {
@@ -102,4 +144,6 @@ export default {
   productByID,
   listRelated,
   read,
+  update,
+  remove,
 };

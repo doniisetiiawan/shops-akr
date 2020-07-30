@@ -15,6 +15,38 @@ const read = (params) => fetch(`/api/products/${params.productId}`, {
   .then((response) => response.json())
   .catch((err) => console.log(err));
 
+const update = (params, credentials, product) => fetch(
+  `/api/product/${params.shopId}/${params.productId}`,
+  {
+    method: 'PUT',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${credentials.t}`,
+    },
+    body: product,
+  },
+)
+  .then((response) => response.json())
+  .catch((err) => {
+    console.log(err);
+  });
+
+const remove = (params, credentials) => fetch(
+  `/api/product/${params.shopId}/${params.productId}`,
+  {
+    method: 'DELETE',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${credentials.t}`,
+    },
+  },
+)
+  .then((response) => response.json())
+  .catch((err) => {
+    console.log(err);
+  });
+
 const listByShop = (params) => fetch(`/api/products/by/${params.shopId}`, {
   method: 'GET',
 })
@@ -41,4 +73,6 @@ export {
   listLatest,
   read,
   listRelated,
+  update,
+  remove,
 };
