@@ -33,6 +33,19 @@ const read = (params) => fetch(`/api/shop/${params.shopId}`, {
   .then((response) => response.json())
   .catch((err) => console.log(err));
 
+const update = (params, credentials, shop) => fetch(`/api/shops/${params.shopId}`, {
+  method: 'PUT',
+  headers: {
+    Accept: 'application/json',
+    Authorization: `Bearer ${credentials.t}`,
+  },
+  body: shop,
+})
+  .then((response) => response.json())
+  .catch((err) => {
+    console.log(err);
+  });
+
 export {
-  create, list, listByOwner, read,
+  create, list, listByOwner, read, update,
 };

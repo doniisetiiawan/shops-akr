@@ -18,6 +18,14 @@ router
   );
 
 router
+  .route('/api/shops/:shopId')
+  .put(
+    authCtrl.requireSignin,
+    shopCtrl.isOwner,
+    shopCtrl.update,
+  );
+
+router
   .route('/api/shops/by/:userId')
   .post(
     authCtrl.requireSignin,
