@@ -11,6 +11,7 @@ import Menu from './core/menu';
 import NewShop from './shop/newShop';
 import Shops from './shop/shops';
 import MyShops from './shop/myShops';
+import Shop from './shop/shop';
 
 class MainRouter extends React.Component {
   componentDidMount = () => {
@@ -38,8 +39,12 @@ class MainRouter extends React.Component {
           <Route path="/user/:userId" component={Profile} />
 
           <Route path="/shops/all" component={Shops} />
+          <Route path="/shops/:shopId" component={Shop} />
 
-          <PrivateRoute path="/seller/shops" component={MyShops} />
+          <PrivateRoute
+            path="/seller/shops"
+            component={MyShops}
+          />
           <PrivateRoute
             path="/seller/shop/new"
             component={NewShop}

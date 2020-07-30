@@ -7,6 +7,8 @@ const router = express.Router();
 
 router.route('/api/shops').get(shopCtrl.list);
 
+router.route('/api/shop/:shopId').get(shopCtrl.read);
+
 router
   .route('/api/shops/by/:userId')
   .get(
@@ -24,6 +26,7 @@ router
     shopCtrl.create,
   );
 
+router.param('shopId', shopCtrl.shopByID);
 router.param('userId', userCtrl.userByID);
 
 export default router;

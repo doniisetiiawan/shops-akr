@@ -29,6 +29,20 @@ const create = (req, res) => {
   });
 };
 
+const shopByID = (req, res, next, id) => {
+  Shop.findById(id)
+    .populate('owner', '_id name')
+    .exec((err, shop) => {
+      if (err || !shop) {
+        return res.status('400').json({
+          error: 'Shop not found',
+        });
+      }
+      req.shop = shop;
+      next();
+    });
+};
+
 const list = (req, res) => {
   Shop.find((err, shops) => {
     if (err) {
@@ -51,8 +65,12 @@ const listByOwner = (req, res) => {
   }).populate('owner', '_id name');
 };
 
+const read = (req, res) => res.json(req.shop);
+
 export default {
   create,
   list,
   listByOwner,
+  shopByID,
+  read,
 };
