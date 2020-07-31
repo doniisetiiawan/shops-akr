@@ -123,6 +123,11 @@ class MyShops extends Component {
                     && auth.isAuthenticated().user._id
                       == shop.owner._id && (
                       <ListItemSecondaryAction>
+                        <Link to={`/seller/orders/${shop.name}/${shop._id}`}>
+                          <Button aria-label="Orders" color="primary">
+                            View Orders
+                          </Button>
+                        </Link>
                         <Link
                           to={`/seller/shop/edit/${shop._id}`}
                         >
