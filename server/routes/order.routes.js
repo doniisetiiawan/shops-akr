@@ -23,7 +23,38 @@ router
     orderCtrl.listByShop,
   );
 
+router
+  .route('/api/order/status_values')
+  .get(orderCtrl.getStatusValues);
+
+router
+  .route('/api/order/:shopId/cancel/:productId')
+  .put(
+    authCtrl.requireSignin,
+    shopCtrl.isOwner,
+    productCtrl.increaseQuantity,
+    orderCtrl.update,
+  );
+
+router
+  .route('/api/order/:orderId/charge/:userId/:shopId')
+  .put(
+    authCtrl.requireSignin,
+    shopCtrl.isOwner,
+    orderCtrl.update,
+  );
+
+router
+  .route('/api/order/status/:shopId')
+  .put(
+    authCtrl.requireSignin,
+    shopCtrl.isOwner,
+    orderCtrl.update,
+  );
+
 router.param('userId', userCtrl.userByID);
 router.param('shopId', shopCtrl.shopByID);
+router.param('productId', productCtrl.productByID);
+router.param('orderId', orderCtrl.orderByID);
 
 export default router;

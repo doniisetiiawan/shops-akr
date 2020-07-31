@@ -186,6 +186,23 @@ const decreaseQuantity = (req, res, next) => {
   });
 };
 
+const increaseQuantity = (req, res, next) => {
+  Product.findByIdAndUpdate(
+    req.product._id,
+    {
+      $inc: { quantity: req.body.quantity },
+    },
+    { new: true },
+  ).exec((err) => {
+    if (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err),
+      });
+    }
+    next();
+  });
+};
+
 export default {
   create,
   listByShop,
@@ -198,4 +215,5 @@ export default {
   listCategories,
   list,
   decreaseQuantity,
+  increaseQuantity,
 };
