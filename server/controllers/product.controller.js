@@ -3,6 +3,7 @@ import fs from 'fs';
 import _ from 'lodash';
 import Product from '../models/product.model';
 import errorHandler from '../helpers/dbErrorHandler';
+import profileImage from '../../client/assets/images/profile-pic.png';
 
 const create = (req, res) => {
   const form = new formidable.IncomingForm();
@@ -46,6 +47,15 @@ const productByID = (req, res, next, id) => {
     });
 };
 
+const photo = (req, res, next) => {
+  if (req.product.image.data) {
+    res.set('Content-Type', req.product.image.contentType);
+    return res.send(req.product.image.data);
+  }
+  next();
+};
+
+const defaultPhoto = (req, res) => res.sendFile(process.cwd() + profileImage);
 const read = (req, res) => {
   req.product.image = undefined;
   return res.json(req.product);
@@ -216,4 +226,6 @@ export default {
   list,
   decreaseQuantity,
   increaseQuantity,
+  photo,
+  defaultPhoto,
 };

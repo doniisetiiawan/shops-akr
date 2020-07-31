@@ -20,6 +20,7 @@ import { withStyles } from '@material-ui/core/styles';
 import auth from '../auth/auth-helper';
 import { read } from './api-user';
 import DeleteUser from './deleteUser';
+import MyOrders from '../order/myOrders';
 
 const styles = (theme) => ({
   root: theme.mixins.gutters({
@@ -115,6 +116,7 @@ class Profile extends Component {
               />
             </ListItem>
           </List>
+          <MyOrders />
         </Paper>
       </>
     );

@@ -11,6 +11,7 @@ import { ExpandLess, ExpandMore } from '@material-ui/icons';
 import Collapse from '@material-ui/core/Collapse';
 import { listByShop } from './api-order';
 import auth from '../auth/auth-helper';
+import ProductOrderEdit from './productOrderEdit';
 
 const styles = (theme) => ({
   root: theme.mixins.gutters({
@@ -72,6 +73,12 @@ class ShopOrders extends Component {
     this.setState({ open: index });
   };
 
+  updateOrders = (index, updatedOrder) => {
+    const { orders } = this.state;
+    orders[index] = updatedOrder;
+    this.setState({ orders });
+  };
+
   render() {
     const { classes } = this.props;
 
@@ -110,12 +117,12 @@ class ShopOrders extends Component {
                   timeout="auto"
                   unmountOnExit
                 >
-                  {/* <ProductOrderEdit */}
-                  {/*  shopId={this.match.params.shopId} */}
-                  {/*  order={order} */}
-                  {/*  orderIndex={index} */}
-                  {/*  updateOrders={this.updateOrders} */}
-                  {/* /> */}
+                  <ProductOrderEdit
+                    shopId={this.props.match.params.shopId}
+                    order={order}
+                    orderIndex={index}
+                    updateOrders={this.updateOrders}
+                  />
                   <div className={classes.customerDetails}>
                     <Typography
                       type="subheading"

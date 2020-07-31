@@ -24,6 +24,10 @@ router
   );
 
 router
+  .route('/api/orders/user/:userId')
+  .get(authCtrl.requireSignin, orderCtrl.listByUser);
+
+router
   .route('/api/order/status_values')
   .get(orderCtrl.getStatusValues);
 
@@ -51,6 +55,8 @@ router
     shopCtrl.isOwner,
     orderCtrl.update,
   );
+
+router.route('/api/order/:orderId').get(orderCtrl.read);
 
 router.param('userId', userCtrl.userByID);
 router.param('shopId', shopCtrl.shopByID);

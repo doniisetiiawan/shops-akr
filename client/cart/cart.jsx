@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import CartItems from './cartItems';
+import Checkout from './checkout';
 
 const styles = () => ({
   root: {
@@ -35,6 +36,9 @@ class Cart extends Component {
               checkout={this.state.checkout}
               setCheckout={this.setCheckout}
             />
+          </Grid>
+          <Grid item xs={6} sm={6}>
+            <Checkout />
           </Grid>
         </Grid>
       </div>

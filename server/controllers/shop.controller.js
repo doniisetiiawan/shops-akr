@@ -3,6 +3,7 @@ import fs from 'fs';
 import _ from 'lodash';
 import Shop from '../models/shop.model';
 import errorHandler from '../helpers/dbErrorHandler';
+import profileImage from '../../client/assets/images/profile-pic.png';
 
 const create = (req, res) => {
   const form = new formidable.IncomingForm();
@@ -43,6 +44,16 @@ const shopByID = (req, res, next, id) => {
       next();
     });
 };
+
+const photo = (req, res, next) => {
+  if (req.shop.image.data) {
+    res.set('Content-Type', req.shop.image.contentType);
+    return res.send(req.shop.image.data);
+  }
+  next();
+};
+
+const defaultPhoto = (req, res) => res.sendFile(process.cwd() + profileImage);
 
 const list = (req, res) => {
   Shop.find((err, shops) => {
@@ -128,4 +139,6 @@ export default {
   isOwner,
   update,
   remove,
+  photo,
+  defaultPhoto,
 };
