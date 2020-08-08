@@ -6,17 +6,13 @@ import compress from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
-import { JssProvider, SheetsRegistry } from 'react-jss';
-import {
-  createGenerateClassName,
-  createMuiTheme,
-  MuiThemeProvider,
-} from '@material-ui/core';
 import ReactDOMServer from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom';
 import React from 'react';
-import blueGrey from '@material-ui/core/colors/blueGrey';
-import lightGreen from '@material-ui/core/colors/lightGreen';
+import {
+  ServerStyleSheets,
+  ThemeProvider,
+} from '@material-ui/styles';
 import Template from '../template';
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
@@ -27,6 +23,7 @@ import MainRouter from '../client/mainRouter';
 
 // comment out before building for production
 import devBundle from './devBundle';
+import theme from '../client/theme';
 
 const CURRENT_WORKING_DIR = process.cwd();
 const app = express();
@@ -53,47 +50,21 @@ app.use('/', productRoutes);
 app.use('/', orderRoutes);
 
 app.get('*', (req, res) => {
-  const sheetsRegistry = new SheetsRegistry();
-  const theme = createMuiTheme({
-    palette: {
-      primary: {
-        light: '#8eacbb',
-        main: '#607d8b',
-        dark: '#34515e',
-        contrastText: '#fff',
-      },
-      secondary: {
-        light: '#e7ff8c',
-        main: '#b2ff59',
-        dark: '#7ecb20',
-        contrastText: '#000',
-      },
-      openTitle: blueGrey['400'],
-      protectedTitle: lightGreen['400'],
-      type: 'light',
-    },
-  });
-  const generateClassName = createGenerateClassName();
+  const sheets = new ServerStyleSheets();
   const context = {};
   const markup = ReactDOMServer.renderToString(
-    <StaticRouter location={req.url} context={context}>
-      <JssProvider
-        registry={sheetsRegistry}
-        generateClassName={generateClassName}
-      >
-        <MuiThemeProvider
-          theme={theme}
-          sheetsManager={new Map()}
-        >
+    sheets.collect(
+      <StaticRouter location={req.url} context={context}>
+        <ThemeProvider theme={theme}>
           <MainRouter />
-        </MuiThemeProvider>
-      </JssProvider>
-    </StaticRouter>,
+        </ThemeProvider>
+      </StaticRouter>,
+    ),
   );
   if (context.url) {
     return res.redirect(303, context.url);
   }
-  const css = sheetsRegistry.toString();
+  const css = sheets.toString();
   res.status(200).send(
     Template({
       markup,
@@ -107,6 +78,11 @@ app.use((err, req, res) => {
     res
       .status(401)
       .json({ error: `${err.name}: ${err.message}` });
+  } else if (err) {
+    res
+      .status(400)
+      .json({ error: `${err.name}: ${err.message}` });
+    console.log(err);
   }
 });
 

@@ -11,9 +11,7 @@ router
     authCtrl.requireSignin,
     shopCtrl.isOwner,
     productCtrl.create,
-  );
-router
-  .route('/api/products/by/:shopId')
+  )
   .get(productCtrl.listByShop);
 
 router
@@ -47,9 +45,7 @@ router
     authCtrl.requireSignin,
     shopCtrl.isOwner,
     productCtrl.update,
-  );
-router
-  .route('/api/product/:shopId/:productId')
+  )
   .delete(
     authCtrl.requireSignin,
     shopCtrl.isOwner,

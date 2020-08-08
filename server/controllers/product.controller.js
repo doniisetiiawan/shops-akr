@@ -1,14 +1,14 @@
 import formidable from 'formidable';
 import fs from 'fs';
-import _ from 'lodash';
+import extend from 'lodash/extend';
 import Product from '../models/product.model';
 import errorHandler from '../helpers/dbErrorHandler';
-import profileImage from '../../client/assets/images/profile-pic.png';
+import defaultImage from '../../client/assets/images/profile-pic.png';
 
 const create = (req, res) => {
   const form = new formidable.IncomingForm();
   form.keepExtensions = true;
-  form.parse(req, (err, fields, files) => {
+  form.parse(req, async (err, fields, files) => {
     if (err) {
       return res.status(400).json({
         message: 'Image could not be uploaded',
@@ -22,29 +22,34 @@ const create = (req, res) => {
       );
       product.image.contentType = files.image.type;
     }
-    product.save((err, result) => {
-      if (err) {
-        return res.status(400).json({
-          error: errorHandler.getErrorMessage(err),
-        });
-      }
+    try {
+      const result = await product.save();
       res.json(result);
-    });
+    } catch (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err),
+      });
+    }
   });
 };
 
-const productByID = (req, res, next, id) => {
-  Product.findById(id)
-    .populate('shop', '_id name')
-    .exec((err, product) => {
-      if (err || !product) {
-        return res.status('400').json({
-          error: 'Product not found',
-        });
-      }
-      req.product = product;
-      next();
+const productByID = async (req, res, next, id) => {
+  try {
+    const product = await Product.findById(id)
+      .populate('shop', '_id name')
+      .exec();
+    if (!product) {
+      return res.status('400').json({
+        error: 'Product not found',
+      });
+    }
+    req.product = product;
+    next();
+  } catch (err) {
+    return res.status('400').json({
+      error: 'Could not retrieve product',
     });
+  }
 };
 
 const photo = (req, res, next) => {
@@ -54,8 +59,8 @@ const photo = (req, res, next) => {
   }
   next();
 };
+const defaultPhoto = (req, res) => res.sendFile(process.cwd() + defaultImage);
 
-const defaultPhoto = (req, res) => res.sendFile(process.cwd() + profileImage);
 const read = (req, res) => {
   req.product.image = undefined;
   return res.json(req.product);
@@ -64,14 +69,14 @@ const read = (req, res) => {
 const update = (req, res) => {
   const form = new formidable.IncomingForm();
   form.keepExtensions = true;
-  form.parse(req, (err, fields, files) => {
+  form.parse(req, async (err, fields, files) => {
     if (err) {
       return res.status(400).json({
         message: 'Photo could not be uploaded',
       });
     }
     let { product } = req;
-    product = _.extend(product, fields);
+    product = extend(product, fields);
     product.updated = Date.now();
     if (files.image) {
       product.image.data = fs.readFileSync(
@@ -79,86 +84,88 @@ const update = (req, res) => {
       );
       product.image.contentType = files.image.type;
     }
-    product.save((err, result) => {
-      if (err) {
-        return res.status(400).send({
-          error: errorHandler.getErrorMessage(err),
-        });
-      }
+    try {
+      const result = await product.save();
       res.json(result);
-    });
-  });
-};
-
-const remove = (req, res) => {
-  const { product } = req;
-  product.remove((err, deletedProduct) => {
-    if (err) {
+    } catch (err) {
       return res.status(400).json({
         error: errorHandler.getErrorMessage(err),
       });
     }
+  });
+};
+
+const remove = async (req, res) => {
+  try {
+    const { product } = req;
+    const deletedProduct = await product.remove();
     res.json(deletedProduct);
-  });
-};
-
-const listByShop = (req, res) => {
-  Product.find({ shop: req.shop._id }, (err, products) => {
-    if (err) {
-      return res.status(400).json({
-        error: errorHandler.getErrorMessage(err),
-      });
-    }
-    res.json(products);
-  })
-    .populate('shop', '_id name')
-    .select('-image');
-};
-
-const listLatest = (req, res) => {
-  Product.find({})
-    .sort('-created')
-    .limit(5)
-    .populate('shop', '_id name')
-    .exec((err, products) => {
-      if (err) {
-        return res.status(400).json({
-          error: errorHandler.getErrorMessage(err),
-        });
-      }
-      res.json(products);
+  } catch (err) {
+    return res.status(400).json({
+      error: errorHandler.getErrorMessage(err),
     });
+  }
 };
 
-const listRelated = (req, res) => {
-  Product.find({
-    _id: { $ne: req.product },
-    category: req.product.category,
-  })
-    .limit(5)
-    .populate('shop', '_id name')
-    .exec((err, products) => {
-      if (err) {
-        return res.status(400).json({
-          error: errorHandler.getErrorMessage(err),
-        });
-      }
-      res.json(products);
-    });
-};
-
-const listCategories = (req, res) => {
-  Product.distinct('category', {}, (err, products) => {
-    if (err) {
-      return res.status(400).json({
-        error: errorHandler.getErrorMessage(err),
-      });
-    }
+const listByShop = async (req, res) => {
+  try {
+    const products = await Product.find({
+      shop: req.shop._id,
+    })
+      .populate('shop', '_id name')
+      .select('-image');
     res.json(products);
-  });
+  } catch (err) {
+    return res.status(400).json({
+      error: errorHandler.getErrorMessage(err),
+    });
+  }
 };
 
-const list = (req, res) => {
+const listLatest = async (req, res) => {
+  try {
+    const products = await Product.find({})
+      .sort('-created')
+      .limit(5)
+      .populate('shop', '_id name')
+      .exec();
+    res.json(products);
+  } catch (err) {
+    return res.status(400).json({
+      error: errorHandler.getErrorMessage(err),
+    });
+  }
+};
+
+const listRelated = async (req, res) => {
+  try {
+    const products = await Product.find({
+      _id: { $ne: req.product },
+      category: req.product.category,
+    })
+      .limit(5)
+      .populate('shop', '_id name')
+      .exec();
+    res.json(products);
+  } catch (err) {
+    return res.status(400).json({
+      error: errorHandler.getErrorMessage(err),
+    });
+  }
+};
+
+const listCategories = async (req, res) => {
+  try {
+    const products = await Product.distinct('category', {});
+    res.json(products);
+  } catch (err) {
+    return res.status(400).json({
+      error: errorHandler.getErrorMessage(err),
+    });
+  }
+};
+
+const list = async (req, res) => {
   const query = {};
   if (req.query.search) {
     query.name = {
@@ -167,50 +174,49 @@ const list = (req, res) => {
     };
   }
   if (req.query.category && req.query.category != 'All') query.category = req.query.category;
-  Product.find(query, (err, products) => {
-    if (err) {
-      return res.status(400).json({
-        error: errorHandler.getErrorMessage(err),
-      });
-    }
+  try {
+    const products = await Product.find(query)
+      .populate('shop', '_id name')
+      .select('-image')
+      .exec();
     res.json(products);
-  })
-    .populate('shop', '_id name')
-    .select('-image');
+  } catch (err) {
+    return res.status(400).json({
+      error: errorHandler.getErrorMessage(err),
+    });
+  }
 };
 
-const decreaseQuantity = (req, res, next) => {
+const decreaseQuantity = async (req, res, next) => {
   const bulkOps = req.body.order.products.map((item) => ({
     updateOne: {
       filter: { _id: item.product._id },
       update: { $inc: { quantity: -item.quantity } },
     },
   }));
-  Product.bulkWrite(bulkOps, {}, (err) => {
-    if (err) {
-      return res.status(400).json({
-        error: 'Could not update product',
-      });
-    }
+  try {
+    await Product.bulkWrite(bulkOps, {});
     next();
-  });
+  } catch (err) {
+    return res.status(400).json({
+      error: 'Could not update product',
+    });
+  }
 };
 
-const increaseQuantity = (req, res, next) => {
-  Product.findByIdAndUpdate(
-    req.product._id,
-    {
-      $inc: { quantity: req.body.quantity },
-    },
-    { new: true },
-  ).exec((err) => {
-    if (err) {
-      return res.status(400).json({
-        error: errorHandler.getErrorMessage(err),
-      });
-    }
+const increaseQuantity = async (req, res, next) => {
+  try {
+    await Product.findByIdAndUpdate(
+      req.product._id,
+      { $inc: { quantity: req.body.quantity } },
+      { new: true },
+    ).exec();
     next();
-  });
+  } catch (err) {
+    return res.status(400).json({
+      error: errorHandler.getErrorMessage(err),
+    });
+  }
 };
 
 export default {
