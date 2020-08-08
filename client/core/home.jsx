@@ -1,71 +1,75 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { withStyles } from '@material-ui/core/styles';
+import React, { useEffect, useState } from 'react';
 import Grid from '@material-ui/core/Grid';
+import { makeStyles } from '@material-ui/styles';
 import Suggestions from '../product/suggestions';
-import { listLatest, listCategories } from '../product/api-product';
 import Search from '../product/search';
 import Categories from '../product/categories';
+import {
+  listCategories,
+  listLatest,
+} from '../product/api-product';
 
-const styles = () => ({
+const useStyles = makeStyles(() => ({
   root: {
     flexGrow: 1,
     margin: 30,
   },
-});
+}));
 
-class Home extends React.Component {
-  constructor(props) {
-    super(props);
+function Home() {
+  const classes = useStyles();
+  const [suggestionTitle, setSuggestionTitle] = useState(
+    'Latest Products',
+  );
+  const [categories, setCategories] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
 
-    this.state = {
-      suggestionTitle: 'Latest Products',
-      suggestions: [],
-      categories: [],
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+    listLatest(signal).then((data) => {
+      if (data.error) {
+        console.log(data.error);
+      } else {
+        setSuggestions(data);
+      }
+    });
+    return function cleanup() {
+      abortController.abort();
     };
-  }
+  }, []);
 
-  componentDidMount = () => {
-    listLatest().then((data) => {
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+    listCategories(signal).then((data) => {
       if (data.error) {
         console.log(data.error);
       } else {
-        this.setState({ suggestions: data });
+        setCategories(data);
       }
     });
-    listCategories().then((data) => {
-      if (data.error) {
-        console.log(data.error);
-      } else {
-        this.setState({ categories: data });
-      }
-    });
-  };
+    return function cleanup() {
+      abortController.abort();
+    };
+  }, []);
 
-  render() {
-    const { classes } = this.props;
-
-    return (
-      <div className={classes.root}>
-        <Grid container spacing={1}>
-          <Grid item xs={8} sm={8}>
-            <Search categories={this.state.categories} />
-            <Categories categories={this.state.categories} />
-          </Grid>
-          <Grid item xs={4} sm={4}>
-            <Suggestions
-              products={this.state.suggestions}
-              title={this.state.suggestionTitle}
-            />
-          </Grid>
+  return (
+    <div className={classes.root}>
+      <Grid container spacing={2}>
+        <Grid item xs={8} sm={8}>
+          <Search categories={categories} />
+          <Categories categories={categories} />
         </Grid>
-      </div>
-    );
-  }
+        <Grid item xs={4} sm={4}>
+          <Suggestions
+            products={suggestions}
+            title={suggestionTitle}
+          />
+        </Grid>
+      </Grid>
+    </div>
+  );
 }
 
-export default withStyles(styles)(Home);
-
-Home.propTypes = {
-  classes: PropTypes.objectOf(PropTypes.any).isRequired,
-};
+export default Home;
