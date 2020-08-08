@@ -1,15 +1,12 @@
 /* eslint-disable react/prop-types */
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
-import { Redirect } from 'react-router-dom';
+import React, { useState } from 'react';
 import Typography from '@material-ui/core/Typography';
 import Icon from '@material-ui/core/Icon';
 import Button from '@material-ui/core/Button';
-import auth from '../auth/auth-helper';
-import { create } from '../order/api-order';
-import cart from './cart-helper';
+import { Redirect } from 'react-router-dom';
+import { makeStyles } from '@material-ui/styles';
 
-const styles = () => ({
+const useStyles = makeStyles(() => ({
   subheading: {
     color: 'rgba(88, 114, 128, 0.87)',
     marginTop: '20px',
@@ -35,88 +32,79 @@ const styles = () => ({
     borderRadius: '4px',
     background: 'white',
   },
-});
+}));
 
-class PlaceOrder extends Component {
-  constructor(props) {
-    super(props);
+function PlaceOrder() {
+  const classes = useStyles();
+  const [values, setValues] = useState({
+    order: {},
+    error: '',
+    redirect: false,
+    orderId: '',
+  });
 
-    this.state = {
-      order: {},
-      error: '',
-      redirect: false,
-    };
-  }
-
-  placeOrder = () => {
-    const jwt = auth.isAuthenticated();
-    create(
-      { userId: jwt.user._id },
-      {
-        t: jwt.token,
-      },
-      this.props.checkoutDetails,
-      'payload.token.id',
-    ).then((data) => {
-      if (data.error) {
-        this.setState({ error: data.error });
-      } else {
-        cart.emptyCart(() => {
-          this.setState({
-            orderId: data._id,
-            redirect: true,
-          });
-        });
-      }
-    });
+  const placeOrder = () => {
+    console.log('test');
   };
 
-  render() {
-    const { classes } = this.props;
-    if (this.state.redirect) {
-      return (
-        <Redirect to={`/order/${this.state.orderId}`} />
-      );
-    }
-
-    return (
-      <>
-        <span>
-          <Typography
-            type="subheading"
-            component="h3"
-            className={classes.subheading}
-          >
-            Card details
-          </Typography>
-          <div className={classes.checkout}>
-            {this.state.error && (
-              <Typography
-                component="span"
-                color="error"
-                className={classes.error}
-              >
-                <Icon
-                  color="error"
-                  className={classes.errorIcon}
-                >
-                  error
-                </Icon>
-                {this.state.error}
-              </Typography>
-            )}
-            <Button
-              color="secondary"
-              variant="contained"
-              onClick={this.placeOrder}
-            >
-              Place Order
-            </Button>
-          </div>
-        </span>
-      </>
-    );
+  if (values.redirect) {
+    return <Redirect to={`/order/${values.orderId}`} />;
   }
+
+  return (
+    <span>
+      <Typography
+        type="subheading"
+        component="h3"
+        className={classes.subheading}
+      >
+        Card details
+      </Typography>
+      {/* <CardElement */}
+      {/*  className={classes.StripeElement} */}
+      {/*  {...{ */}
+      {/*    style: { */}
+      {/*      base: { */}
+      {/*        color: '#424770', */}
+      {/*        letterSpacing: '0.025em', */}
+      {/*        fontFamily: */}
+      {/*          'Source Code Pro, Menlo, monospace', */}
+      {/*        '::placeholder': { */}
+      {/*          color: '#aab7c4', */}
+      {/*        }, */}
+      {/*      }, */}
+      {/*      invalid: { */}
+      {/*        color: '#9e2146', */}
+      {/*      }, */}
+      {/*    }, */}
+      {/*  }} */}
+      {/* /> */}
+      <div className={classes.checkout}>
+        {values.error && (
+          <Typography
+            component="span"
+            color="error"
+            className={classes.error}
+          >
+            <Icon
+              color="error"
+              className={classes.errorIcon}
+            >
+              error
+            </Icon>
+            {values.error}
+          </Typography>
+        )}
+        <Button
+          color="secondary"
+          variant="contained"
+          onClick={placeOrder}
+        >
+          Place Order
+        </Button>
+      </div>
+    </span>
+  );
 }
 
-export default withStyles(styles)(PlaceOrder);
+export default PlaceOrder;

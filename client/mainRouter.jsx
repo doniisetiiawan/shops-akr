@@ -20,69 +20,58 @@ import Cart from './cart/cart';
 import ShopOrders from './order/shopOrders';
 import Order from './order/order';
 
-class MainRouter extends React.Component {
-  componentDidMount = () => {
-    const jssStyles = document.getElementById(
-      'jss-server-side',
-    );
-    if (jssStyles && jssStyles.parentNode) {
-      jssStyles.parentNode.removeChild(jssStyles);
-    }
-  };
+function MainRouter() {
+  return (
+    <>
+      <Menu />
+      <Switch>
+        <Route exact path="/" component={Home} />
+        <Route path="/users" component={Users} />
+        <Route path="/signup" component={Signup} />
+        <Route path="/signin" component={Signin} />
+        <PrivateRoute
+          path="/user/edit/:userId"
+          component={EditProfile}
+        />
+        <Route path="/user/:userId" component={Profile} />
 
-  render() {
-    return (
-      <>
-        <Menu />
-        <Switch>
-          <Route exact path="/" component={Home} />
-          <Route path="/users" component={Users} />
-          <Route path="/signup" component={Signup} />
-          <Route path="/signin" component={Signin} />
-          <PrivateRoute
-            path="/user/edit/:userId"
-            component={EditProfile}
-          />
-          <Route path="/user/:userId" component={Profile} />
+        <Route path="/cart" component={Cart} />
+        <Route
+          path="/product/:productId"
+          component={Product}
+        />
+        <Route path="/shops/all" component={Shops} />
+        <Route path="/shops/:shopId" component={Shop} />
 
-          <Route path="/cart" component={Cart} />
-          <Route
-            path="/product/:productId"
-            component={Product}
-          />
-          <Route path="/shops/all" component={Shops} />
-          <Route path="/shops/:shopId" component={Shop} />
+        <Route path="/order/:orderId" component={Order} />
+        <PrivateRoute
+          path="/seller/orders/:shop/:shopId"
+          component={ShopOrders}
+        />
 
-          <Route path="/order/:orderId" component={Order} />
-          <PrivateRoute
-            path="/seller/orders/:shop/:shopId"
-            component={ShopOrders}
-          />
-
-          <PrivateRoute
-            path="/seller/shops"
-            component={MyShops}
-          />
-          <PrivateRoute
-            path="/seller/shop/new"
-            component={NewShop}
-          />
-          <PrivateRoute
-            path="/seller/shop/edit/:shopId"
-            component={EditShop}
-          />
-          <PrivateRoute
-            path="/seller/:shopId/products/new"
-            component={NewProduct}
-          />
-          <PrivateRoute
-            path="/seller/:shopId/:productId/edit"
-            component={EditProduct}
-          />
-        </Switch>
-      </>
-    );
-  }
+        <PrivateRoute
+          path="/seller/shops"
+          component={MyShops}
+        />
+        <PrivateRoute
+          path="/seller/shop/new"
+          component={NewShop}
+        />
+        <PrivateRoute
+          path="/seller/shop/edit/:shopId"
+          component={EditShop}
+        />
+        <PrivateRoute
+          path="/seller/:shopId/products/new"
+          component={NewProduct}
+        />
+        <PrivateRoute
+          path="/seller/:shopId/:productId/edit"
+          component={EditProduct}
+        />
+      </Switch>
+    </>
+  );
 }
 
 export default MainRouter;

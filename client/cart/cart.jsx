@@ -1,49 +1,44 @@
 /* eslint-disable react/prop-types */
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
+import React, { useState } from 'react';
 import Grid from '@material-ui/core/Grid';
+import { makeStyles } from '@material-ui/styles';
 import CartItems from './cartItems';
 import Checkout from './checkout';
 
-const styles = () => ({
+const useStyles = makeStyles(() => ({
   root: {
     flexGrow: 1,
     margin: 30,
   },
-});
+}));
 
-class Cart extends Component {
-  constructor(props) {
-    super(props);
+function Cart() {
+  const classes = useStyles();
+  const [checkout, setCheckout] = useState(false);
 
-    this.state = {
-      checkout: false,
-    };
-  }
-
-  setCheckout = (val) => {
-    this.setState({ checkout: val });
+  const showCheckout = (val) => {
+    setCheckout(val);
   };
 
-  render() {
-    const { classes } = this.props;
-
-    return (
-      <div className={classes.root}>
-        <Grid container spacing={1}>
-          <Grid item xs={6} sm={6}>
-            <CartItems
-              checkout={this.state.checkout}
-              setCheckout={this.setCheckout}
-            />
-          </Grid>
-          <Grid item xs={6} sm={6}>
-            <Checkout />
-          </Grid>
+  return (
+    <div className={classes.root}>
+      <Grid container spacing={8}>
+        <Grid item xs={6} sm={6}>
+          <CartItems
+            checkout={checkout}
+            setCheckout={showCheckout}
+          />
         </Grid>
-      </div>
-    );
-  }
+        {checkout && (
+          <Grid item xs={6} sm={6}>
+            {/* <StripeProvider apiKey={config.stripe_test_api_key}> */}
+            <Checkout />
+            {/* </StripeProvider> */}
+          </Grid>
+        )}
+      </Grid>
+    </div>
+  );
 }
 
-export default withStyles(styles)(Cart);
+export default Cart;

@@ -1,15 +1,15 @@
 /* eslint-disable react/prop-types */
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
+import React, { useState } from 'react';
 import Card from '@material-ui/core/Card';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import Icon from '@material-ui/core/Icon';
+import { makeStyles } from '@material-ui/styles';
+import PlaceOrder from './placeOrder';
 import auth from '../auth/auth-helper';
 import cart from './cart-helper';
-import PlaceOrder from './placeOrder';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   card: {
     margin: '24px 0px',
     padding: '16px 40px 90px 40px',
@@ -25,181 +25,153 @@ const styles = (theme) => ({
   },
   addressField: {
     marginTop: '4px',
-    marginLeft: theme.spacing(),
-    marginRight: theme.spacing(),
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
     width: '45%',
   },
   streetField: {
     marginTop: '4px',
-    marginLeft: theme.spacing(),
-    marginRight: theme.spacing(),
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
     width: '93%',
   },
   textField: {
-    marginLeft: theme.spacing(),
-    marginRight: theme.spacing(),
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
     width: '90%',
   },
-});
+}));
 
-class Checkout extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      checkoutDetails: {
-        customer_name: '',
-        customer_email: '',
-        delivery_address: {
-          street: '',
-          city: '',
-          state: '',
-          zipcode: '',
-          country: '',
-        },
+function Checkout() {
+  const classes = useStyles();
+  const { user } = auth.isAuthenticated();
+  const [values, setValues] = useState({
+    checkoutDetails: {
+      products: cart.getCart(),
+      customer_name: user.name,
+      customer_email: user.email,
+      delivery_address: {
+        street: '',
+        city: '',
+        state: '',
+        zipcode: '',
+        country: '',
       },
-      error: '',
-    };
-  }
+    },
+    error: '',
+  });
 
-  componentDidMount = () => {
-    const { user } = auth.isAuthenticated();
-    const { checkoutDetails } = this.state;
-    checkoutDetails.products = cart.getCart();
-    checkoutDetails.customer_name = user.name;
-    checkoutDetails.customer_email = user.email;
-    this.setState({ checkoutDetails });
-  };
-
-  handleCustomerChange = (name) => (event) => {
-    const { checkoutDetails } = this.state;
+  const handleCustomerChange = (name) => (event) => {
+    const { checkoutDetails } = values;
     checkoutDetails[name] = event.target.value || undefined;
-    this.setState({ checkoutDetails });
+    setValues({ ...values, checkoutDetails });
   };
 
-  handleAddressChange = (name) => (event) => {
-    const { checkoutDetails } = this.state;
+  const handleAddressChange = (name) => (event) => {
+    const { checkoutDetails } = values;
     checkoutDetails.delivery_address[name] = event.target.value || undefined;
-    this.setState({ checkoutDetails });
+    setValues({ ...values, checkoutDetails });
   };
 
-  render() {
-    const { classes } = this.props;
-
-    return (
-      <>
-        <Card className={classes.card}>
-          <Typography
-            type="title"
-            className={classes.title}
-          >
-            Checkout
-          </Typography>
-          <TextField
-            id="name"
-            label="Name"
-            className={classes.textField}
-            value={this.state.checkoutDetails.customer_name}
-            onChange={this.handleCustomerChange(
-              'customer_name',
-            )}
-            margin="normal"
-          />
-          <br />
-          <TextField
-            id="email"
-            type="email"
-            label="Email"
-            className={classes.textField}
-            value={
-              this.state.checkoutDetails.customer_email
-            }
-            onChange={this.handleCustomerChange(
-              'customer_email',
-            )}
-            margin="normal"
-          />
-          <br />
-          <Typography
-            type="subheading"
-            component="h3"
-            className={classes.subheading}
-          >
-            Delivery Address
-          </Typography>
-          <TextField
-            id="street"
-            label="Street Address"
-            className={classes.streetField}
-            value={
-              this.state.checkoutDetails.delivery_address
-                .street
-            }
-            onChange={this.handleAddressChange('street')}
-            margin="normal"
-          />
-          <br />
-          <TextField
-            id="city"
-            label="City"
-            className={classes.addressField}
-            value={
-              this.state.checkoutDetails.delivery_address
-                .city
-            }
-            onChange={this.handleAddressChange('city')}
-            margin="normal"
-          />
-          <TextField
-            id="state"
-            label="State"
-            className={classes.addressField}
-            value={
-              this.state.checkoutDetails.delivery_address
-                .state
-            }
-            onChange={this.handleAddressChange('state')}
-            margin="normal"
-          />
-          <br />
-          <TextField
-            id="zipcode"
-            label="Zip Code"
-            className={classes.addressField}
-            value={
-              this.state.checkoutDetails.delivery_address
-                .zipcode
-            }
-            onChange={this.handleAddressChange('zipcode')}
-            margin="normal"
-          />
-          <TextField
-            id="country"
-            label="Country"
-            className={classes.addressField}
-            value={
-              this.state.checkoutDetails.delivery_address
-                .country
-            }
-            onChange={this.handleAddressChange('country')}
-            margin="normal"
-          />
-          <br />
-          {this.state.error && (
-            <Typography component="p" color="error">
-              <Icon color="error" className={classes.error}>
-                error
-              </Icon>
-              {this.state.error}
-            </Typography>
-          )}
-          <div>
-            <PlaceOrder checkoutDetails={this.state.checkoutDetails} />
-          </div>
-        </Card>
-      </>
-    );
-  }
+  return (
+    <Card className={classes.card}>
+      <Typography type="title" className={classes.title}>
+        Checkout
+      </Typography>
+      <TextField
+        id="name"
+        label="Name"
+        className={classes.textField}
+        value={values.checkoutDetails.customer_name}
+        onChange={handleCustomerChange('customer_name')}
+        margin="normal"
+      />
+      <br />
+      <TextField
+        id="email"
+        type="email"
+        label="Email"
+        className={classes.textField}
+        value={values.checkoutDetails.customer_email}
+        onChange={handleCustomerChange('customer_email')}
+        margin="normal"
+      />
+      <br />
+      <Typography
+        type="subheading"
+        component="h3"
+        className={classes.subheading}
+      >
+        Delivery Address
+      </Typography>
+      <TextField
+        id="street"
+        label="Street Address"
+        className={classes.streetField}
+        value={
+          values.checkoutDetails.delivery_address.street
+        }
+        onChange={handleAddressChange('street')}
+        margin="normal"
+      />
+      <br />
+      <TextField
+        id="city"
+        label="City"
+        className={classes.addressField}
+        value={values.checkoutDetails.delivery_address.city}
+        onChange={handleAddressChange('city')}
+        margin="normal"
+      />
+      <TextField
+        id="state"
+        label="State"
+        className={classes.addressField}
+        value={
+          values.checkoutDetails.delivery_address.state
+        }
+        onChange={handleAddressChange('state')}
+        margin="normal"
+      />
+      <br />
+      <TextField
+        id="zipcode"
+        label="Zip Code"
+        className={classes.addressField}
+        value={
+          values.checkoutDetails.delivery_address.zipcode
+        }
+        onChange={handleAddressChange('zipcode')}
+        margin="normal"
+      />
+      <TextField
+        id="country"
+        label="Country"
+        className={classes.addressField}
+        value={
+          values.checkoutDetails.delivery_address.country
+        }
+        onChange={handleAddressChange('country')}
+        margin="normal"
+      />
+      <br />{' '}
+      {values.error && (
+        <Typography component="p" color="error">
+          <Icon color="error" className={classes.error}>
+            error
+          </Icon>
+          {values.error}
+        </Typography>
+      )}
+      <div>
+        {/* <Elements> */}
+        <PlaceOrder
+          checkoutDetails={values.checkoutDetails}
+        />
+        {/* </Elements> */}
+      </div>
+    </Card>
+  );
 }
 
-export default withStyles(styles)(Checkout);
+export default Checkout;
