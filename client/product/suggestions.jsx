@@ -1,6 +1,5 @@
-/* eslint-disable react/prop-types,react/no-array-index-key */
+/* eslint-disable react/no-array-index-key */
 import React from 'react';
-import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Card from '@material-ui/core/Card';
@@ -11,10 +10,12 @@ import Icon from '@material-ui/core/Icon';
 import IconButton from '@material-ui/core/IconButton';
 import { ViewModule as ViewIcon } from '@material-ui/icons';
 import Divider from '@material-ui/core/Divider';
+import { makeStyles } from '@material-ui/styles';
+import AddToCart from '../cart/addToCart';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   root: theme.mixins.gutters({
-    padding: theme.spacing(),
+    padding: theme.spacing(1),
     paddingBottom: 24,
     backgroundColor: '#80808024',
   }),
@@ -73,18 +74,15 @@ const styles = (theme) => ({
     paddingLeft: '8px',
     color: theme.palette.text.secondary,
   },
-});
+}));
 
 function Suggestions(props) {
-  const { classes } = props;
+  const classes = useStyles();
 
   return (
-    <>
+    <div>
       <Paper className={classes.root} elevation={4}>
-        <Typography
-          type="title"
-          className={classes.title}
-        >
+        <Typography type="title" className={classes.title}>
           {props.title}
         </Typography>
         {props.products.map((item, i) => (
@@ -99,7 +97,7 @@ function Suggestions(props) {
                 <CardContent className={classes.content}>
                   <Link to={`/product/${item._id}`}>
                     <Typography
-                      type="title"
+                      variant="h3"
                       component="h3"
                       className={classes.productTitle}
                       color="primary"
@@ -114,7 +112,7 @@ function Suggestions(props) {
                     >
                       <Icon className={classes.icon}>
                         shopping_basket
-                      </Icon>
+                      </Icon>{' '}
                       {item.shop.name}
                     </Typography>
                   </Link>
@@ -122,10 +120,8 @@ function Suggestions(props) {
                     component="p"
                     className={classes.date}
                   >
-                    Added on
-                    {new Date(
-                      item.created,
-                    ).toDateString()}
+                    Added on{' '}
+                    {new Date(item.created).toDateString()}
                   </Typography>
                 </CardContent>
                 <div className={classes.controls}>
@@ -148,7 +144,7 @@ function Suggestions(props) {
                         />
                       </IconButton>
                     </Link>
-                    {/* <AddToCart item={item} /> */}
+                    <AddToCart item={item} />
                   </span>
                 </div>
               </div>
@@ -157,8 +153,8 @@ function Suggestions(props) {
           </span>
         ))}
       </Paper>
-    </>
+    </div>
   );
 }
 
-export default withStyles(styles)(Suggestions);
+export default Suggestions;

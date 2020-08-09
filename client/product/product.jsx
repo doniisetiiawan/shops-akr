@@ -1,6 +1,4 @@
-/* eslint-disable react/prop-types */
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
+import React, { useEffect, useState } from 'react';
 import Grid from '@material-ui/core/Grid';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -8,11 +6,12 @@ import CardMedia from '@material-ui/core/CardMedia';
 import Typography from '@material-ui/core/Typography';
 import { Link } from 'react-router-dom';
 import Icon from '@material-ui/core/Icon';
-import { read, listRelated } from './api-product';
+import { makeStyles } from '@material-ui/styles';
 import Suggestions from './suggestions';
 import AddToCart from '../cart/addToCart';
+import { listRelated, read } from './api-product';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
     margin: 30,
@@ -59,118 +58,121 @@ const styles = (theme) => ({
     margin: '8px 24px',
     display: 'inline-block',
   },
-});
+}));
 
-class Product extends Component {
-  constructor(props) {
-    super(props);
+function Product({ match }) {
+  const classes = useStyles();
+  const [product, setProduct] = useState({ shop: {} });
+  const [suggestions, setSuggestions] = useState([]);
+  const [error, setError] = useState('');
 
-    this.state = {
-      product: { shop: {} },
-      suggestions: [],
-    };
-  }
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
 
-  loadProduct = (productId) => {
-    read({ productId }).then((data) => {
+    read(
+      { productId: match.params.productId },
+      signal,
+    ).then((data) => {
       if (data.error) {
-        this.setState({ error: data.error });
+        setError(data.error);
       } else {
-        this.setState({ product: data });
-        listRelated({ productId: data._id }).then(
-          (data) => {
-            if (data.error) {
-              console.log(data.error);
-            } else {
-              this.setState({ suggestions: data });
-            }
-          },
-        );
+        setProduct(data);
       }
     });
-  };
+    return function cleanup() {
+      abortController.abort();
+    };
+  }, [match.params.productId]);
 
-  componentDidMount = () => {
-    this.loadProduct(this.props.match.params.productId);
-  };
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps = (props) => {
-    this.loadProduct(props.match.params.productId);
-  };
+    listRelated(
+      { productId: match.params.productId },
+      signal,
+    ).then((data) => {
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setSuggestions(data);
+      }
+    });
+    return function cleanup() {
+      abortController.abort();
+    };
+  }, [match.params.productId]);
 
-  render() {
-    const imageUrl = this.state.product._id
-      ? `/api/product/image/${
-        this.state.product._id
-      }?${new Date().getTime()}`
-      : '/api/product/defaultphoto';
-    const { classes } = this.props;
+  const imageUrl = product._id
+    ? `/api/product/image/${
+      product._id
+    }?${new Date().getTime()}`
+    : '/api/product/defaultphoto';
 
-    return (
-      <div className={classes.root}>
-        <Grid container spacing={1}>
-          <Grid item xs={7} sm={7}>
-            <Card className={classes.card}>
-              <CardHeader
-                title={this.state.product.name}
-                subheader={
-                  this.state.product.quantity > 0
-                    ? 'In Stock'
-                    : 'Out of Stock'
-                }
-                action={(
-                  <span className={classes.action}>
-                    <AddToCart
-                      cartStyle={classes.addCart}
-                      item={this.state.product}
-                    />
-                  </span>
-                )}
+  return (
+    <div className={classes.root}>
+      <Grid container spacing={10}>
+        <Grid item xs={7} sm={7}>
+          <Card className={classes.card}>
+            <CardHeader
+              title={product.name}
+              subheader={
+                product.quantity > 0
+                  ? 'In Stock'
+                  : 'Out of Stock'
+              }
+              action={(
+                <span className={classes.action}>
+                  <AddToCart
+                    cartStyle={classes.addCart}
+                    item={product}
+                  />
+                </span>
+              )}
+            />
+            <div className={classes.flex}>
+              <CardMedia
+                className={classes.media}
+                image={imageUrl}
+                title={product.name}
               />
-              <div className={classes.flex}>
-                <CardMedia
-                  className={classes.media}
-                  image={imageUrl}
-                  title={this.state.product.name}
-                />
-                <Typography
-                  component="p"
-                  type="subheading"
-                  className={classes.subheading}
+              <Typography
+                component="p"
+                variant="subtitle1"
+                className={classes.subheading}
+              >
+                {product.description}
+                <br />
+                <span className={classes.price}>
+                  $ {product.price}
+                </span>
+                <Link
+                  to={`/shops/${product.shop._id}`}
+                  className={classes.link}
                 >
-                  {this.state.product.description}
-                  <br />
-                  <span className={classes.price}>
-                    $ {this.state.product.price}
+                  <span>
+                    <Icon className={classes.icon}>
+                      shopping_basket
+                    </Icon>{' '}
+                    {product.shop.name}
                   </span>
-                  <Link
-                    to={`/shops/${this.state.product.shop._id}`}
-                    className={classes.link}
-                  >
-                    <span>
-                      <Icon className={classes.icon}>
-                        shopping_basket
-                      </Icon>
-                      {this.state.product.shop.name}
-                    </span>
-                  </Link>
-                </Typography>
-              </div>
-            </Card>
-          </Grid>
-          {this.state.suggestions.length > 0 && (
-            <Grid item xs={5} sm={5}>
-              <Suggestions
-                products={this.state.suggestions}
-                title="Related Products"
-              />
-            </Grid>
-          )}
+                </Link>
+              </Typography>
+            </div>
+          </Card>
         </Grid>
-      </div>
-    );
-  }
+        {suggestions.length > 0 && (
+          <Grid item xs={5} sm={5}>
+            <Suggestions
+              products={suggestions}
+              title="Related Products"
+            />
+          </Grid>
+        )}
+      </Grid>
+    </div>
+  );
 }
 
-export default withStyles(styles)(Product);
+export default Product;

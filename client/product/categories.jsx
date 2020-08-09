@@ -1,17 +1,17 @@
 // eslint-disable-next-line max-len
-/* eslint-disable react/prop-types,react/no-array-index-key,jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions */
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
+/* eslint-disable react/no-array-index-key,jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions */
+import React, { useEffect, useState } from 'react';
 import Card from '@material-ui/core/Card';
 import Typography from '@material-ui/core/Typography';
 import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
 import Icon from '@material-ui/core/Icon';
 import Divider from '@material-ui/core/Divider';
-import { list } from './api-product';
+import { makeStyles } from '@material-ui/styles';
 import Products from './products';
+import { list } from './api-product';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -28,7 +28,7 @@ const styles = (theme) => ({
     verticalAlign: 'middle',
     lineHeight: 2.5,
     textAlign: 'center',
-    fontSize: '1.5em',
+    fontSize: '1.35em',
     margin: '0 4px 0 0',
   },
   card: {
@@ -53,80 +53,83 @@ const styles = (theme) => ({
     textShadow: '0px 2px 12px #ffffff',
     cursor: 'pointer',
   },
-});
+}));
 
-class Categories extends Component {
-  constructor(props) {
-    super(props);
+function Categories(props) {
+  const classes = useStyles();
+  const [products, setProducts] = useState([]);
+  const [selected, setSelected] = useState(
+    props.categories[0],
+  );
 
-    this.state = {
-      products: [],
-      selected: '',
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    list({
+      category: props.categories[0],
+    }).then((data) => {
+      if (data.error) {
+        console.log(data.error);
+      } else {
+        setProducts(data);
+      }
+    });
+    return function cleanup() {
+      abortController.abort();
     };
-  }
+  }, []);
 
-  listbyCategory = (category) => {
-    this.setState({ selected: category });
+  const listbyCategory = (category) => () => {
+    setSelected(category);
     list({
       category,
     }).then((data) => {
       if (data.error) {
         console.log(data.error);
       } else {
-        this.setState({ products: data });
+        setProducts(data);
       }
     });
   };
 
-  render() {
-    const { classes } = this.props;
-
-    return (
-      <>
-        <Card className={classes.card}>
-          <Typography
-            type="title"
-            className={classes.title}
-          >
-            Explore by category
-          </Typography>
-          <div className={classes.root}>
-            <GridList className={classes.gridList} cols={4}>
-              {this.props.categories.map((tile, i) => (
-                <GridListTile
-                  key={i}
-                  className={classes.tileTitle}
-                  style={{
-                    height: '64px',
-                    backgroundColor:
-                      this.state.selected == tile
-                        ? 'rgba(95, 139, 137, 0.56)'
-                        : 'rgba(95, 124, 139, 0.32)',
-                  }}
+  return (
+    <div>
+      <Card className={classes.card}>
+        <Typography type="title" className={classes.title}>
+          Explore by category
+        </Typography>
+        <div className={classes.root}>
+          <GridList className={classes.gridList} cols={4}>
+            {props.categories.map((tile, i) => (
+              <GridListTile
+                key={i}
+                className={classes.tileTitle}
+                style={{
+                  height: '64px',
+                  backgroundColor:
+                    selected == tile
+                      ? 'rgba(95, 139, 137, 0.56)'
+                      : 'rgba(95, 124, 139, 0.32)',
+                }}
+              >
+                <span
+                  className={classes.link}
+                  onClick={listbyCategory(tile)}
                 >
-                  <span
-                    className={classes.link}
-                    onClick={() => this.listbyCategory(tile)}
-                  >
-                    {tile}
-                    <Icon className={classes.icon}>
-                      {this.state.selected == tile
-                        && 'arrow_drop_down'}
-                    </Icon>
-                  </span>
-                </GridListTile>
-              ))}
-            </GridList>
-          </div>
-          <Divider />
-          <Products
-            products={this.state.products}
-            searched={false}
-          />
-        </Card>
-      </>
-    );
-  }
+                  {tile}{' '}
+                  <Icon className={classes.icon}>
+                    {selected == tile && 'arrow_drop_down'}
+                  </Icon>
+                </span>
+              </GridListTile>
+            ))}
+          </GridList>
+        </div>
+        <Divider />
+        <Products products={products} searched={false} />
+      </Card>
+    </div>
+  );
 }
 
-export default withStyles(styles)(Categories);
+export default Categories;

@@ -1,14 +1,14 @@
-/* eslint-disable react/prop-types,react/no-array-index-key */
+/* eslint-disable react/no-array-index-key */
 import React from 'react';
-import { withStyles } from '@material-ui/core/styles';
 import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
 import { Link } from 'react-router-dom';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
 import Typography from '@material-ui/core/Typography';
+import { makeStyles } from '@material-ui/styles';
 import AddToCart from '../cart/addToCart';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -50,33 +50,43 @@ const styles = (theme) => ({
     color: 'rgb(189, 222, 219)',
     display: 'block',
   },
-});
+}));
 
 function Products(props) {
-  const { classes } = props;
+  const classes = useStyles();
 
   return (
     <div className={classes.root}>
       {props.products.length > 0 ? (
-        <div>
-          <GridList cellHeight={200} cols={3}>
+        <div className={classes.container}>
+          <GridList
+            cellHeight={200}
+            className={classes.gridList}
+            cols={3}
+          >
             {props.products.map((product, i) => (
-              <GridListTile key={i}>
+              <GridListTile
+                key={i}
+                className={classes.tile}
+              >
                 <Link to={`/product/${product._id}`}>
                   <img
+                    className={classes.image}
                     src={`/api/product/image/${product._id}`}
                     alt={product.name}
                   />
                 </Link>
                 <GridListTileBar
+                  className={classes.tileBar}
                   title={(
-                    <Link to={`/product/${product._id}`}>
+                    <Link
+                      to={`/product/${product._id}`}
+                      className={classes.tileTitle}
+                    >
                       {product.name}
                     </Link>
                   )}
-                  subtitle={
-                    <span>$ {product.price}</span>
-                  }
+                  subtitle={<span>$ {product.price}</span>}
                   actionIcon={<AddToCart item={product} />}
                 />
               </GridListTile>
@@ -85,7 +95,11 @@ function Products(props) {
         </div>
       ) : (
         props.searched && (
-          <Typography type="subheading" component="h4">
+          <Typography
+            variant="subheading"
+            component="h4"
+            className={classes.title}
+          >
             No products found! :(
           </Typography>
         )
@@ -94,4 +108,4 @@ function Products(props) {
   );
 }
 
-export default withStyles(styles)(Products);
+export default Products;

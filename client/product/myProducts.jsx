@@ -1,6 +1,5 @@
-/* eslint-disable react/prop-types,react/no-array-index-key,react/no-access-state-in-setstate */
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
+/* eslint-disable react/no-array-index-key */
+import React, { useEffect, useState } from 'react';
 import Card from '@material-ui/core/Card';
 import Typography from '@material-ui/core/Typography';
 import { Link } from 'react-router-dom';
@@ -13,10 +12,11 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import IconButton from '@material-ui/core/IconButton';
 import { Edit } from '@material-ui/icons';
 import Divider from '@material-ui/core/Divider';
-import { listByShop } from './api-product';
+import { makeStyles } from '@material-ui/styles';
 import DeleteProduct from './deleteProduct';
+import { listByShop } from './api-product';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   products: {
     padding: '24px',
   },
@@ -43,119 +43,108 @@ const styles = (theme) => ({
   details: {
     padding: '10px',
   },
-});
+}));
 
-class MyProducts extends Component {
-  constructor(props) {
-    super(props);
+function MyProducts(props) {
+  const classes = useStyles();
+  const [products, setProducts] = useState([]);
 
-    this.state = {
-      products: [],
-    };
-  }
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
 
-  loadProducts = () => {
-    listByShop({
-      shopId: this.props.shopId,
-    }).then((data) => {
+    listByShop(
+      {
+        shopId: props.shopId,
+      },
+      signal,
+    ).then((data) => {
       if (data.error) {
-        this.setState({ error: data.error });
+        console.log(data.error);
       } else {
-        this.setState({ products: data });
+        setProducts(data);
       }
     });
-  };
+    return function cleanup() {
+      abortController.abort();
+    };
+  }, []);
 
-  componentDidMount = () => {
-    this.loadProducts();
-  };
-
-  removeProduct = (product) => {
-    const updatedProducts = this.state.products;
+  const removeProduct = (product) => {
+    const updatedProducts = [...products];
     const index = updatedProducts.indexOf(product);
     updatedProducts.splice(index, 1);
-    this.setState({ shops: updatedProducts });
+    setProducts(updatedProducts);
   };
 
-  render() {
-    const { classes } = this.props;
-
-    return (
-      <>
-        <Card className={classes.products}>
-          <Typography
-            type="title"
-            className={classes.title}
-          >
-            Products
-            <span className={classes.addButton}>
-              <Link
-                to={`/seller/${this.props.shopId}/products/new`}
-              >
-                <Button color="primary" variant="raised">
-                  <Icon className={classes.leftIcon}>
-                    add_box
-                  </Icon>
-                  New Product
-                </Button>
-              </Link>
-            </span>
-          </Typography>
-          <List dense>
-            {this.state.products.map((product, i) => (
-              <span key={i}>
-                <ListItem>
-                  <CardMedia
-                    className={classes.cover}
-                    image={`/api/product/image/${
-                      product._id
-                    }?${new Date().getTime()}`}
-                    title={product.name}
-                  />
-                  <div className={classes.details}>
-                    <Typography
-                      type="headline"
-                      component="h2"
-                      color="primary"
-                      className={classes.productTitle}
-                    >
-                      {product.name}
-                    </Typography>
-                    <Typography
-                      type="subheading"
-                      component="h4"
-                      className={classes.subheading}
-                    >
-                      Quantity: {product.quantity} | Price:
-                      ${product.price}
-                    </Typography>
-                  </div>
-                  <ListItemSecondaryAction>
-                    <Link
-                      to={`/seller/${product.shop._id}/${product._id}/edit`}
-                    >
-                      <IconButton
-                        aria-label="Edit"
-                        color="primary"
-                      >
-                        <Edit />
-                      </IconButton>
-                    </Link>
-                    <DeleteProduct
-                      product={product}
-                      shopId={this.props.shopId}
-                      onRemove={this.removeProduct}
-                    />
-                  </ListItemSecondaryAction>
-                </ListItem>
-                <Divider />
-              </span>
-            ))}
-          </List>
-        </Card>
-      </>
-    );
-  }
+  return (
+    <Card className={classes.products}>
+      <Typography type="title" className={classes.title}>
+        Products
+        <span className={classes.addButton}>
+          <Link to={`/seller/${props.shopId}/products/new`}>
+            <Button color="primary" variant="contained">
+              <Icon className={classes.leftIcon}>
+                add_box
+              </Icon>{' '}
+              New Product
+            </Button>
+          </Link>
+        </span>
+      </Typography>
+      <List dense>
+        {products.map((product, i) => (
+          <span key={i}>
+            <ListItem>
+              <CardMedia
+                className={classes.cover}
+                image={`/api/product/image/${
+                  product._id
+                }?${new Date().getTime()}`}
+                title={product.name}
+              />
+              <div className={classes.details}>
+                <Typography
+                  type="headline"
+                  component="h2"
+                  color="primary"
+                  className={classes.productTitle}
+                >
+                  {product.name}
+                </Typography>
+                <Typography
+                  type="subheading"
+                  component="h4"
+                  className={classes.subheading}
+                >
+                  Quantity: {product.quantity} | Price: $
+                  {product.price}
+                </Typography>
+              </div>
+              <ListItemSecondaryAction>
+                <Link
+                  to={`/seller/${product.shop._id}/${product._id}/edit`}
+                >
+                  <IconButton
+                    aria-label="Edit"
+                    color="primary"
+                  >
+                    <Edit />
+                  </IconButton>
+                </Link>
+                <DeleteProduct
+                  product={product}
+                  shopId={props.shopId}
+                  onRemove={removeProduct}
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
+            <Divider />
+          </span>
+        ))}
+      </List>
+    </Card>
+  );
 }
 
-export default withStyles(styles)(MyProducts);
+export default MyProducts;

@@ -1,6 +1,5 @@
-/* eslint-disable react/prop-types,jsx-a11y/label-has-associated-control */
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
+/* eslint-disable no-unused-expressions,jsx-a11y/label-has-associated-control */
+import React, { useEffect, useState } from 'react';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
@@ -11,10 +10,11 @@ import TextField from '@material-ui/core/TextField';
 import Icon from '@material-ui/core/Icon';
 import CardActions from '@material-ui/core/CardActions';
 import { Link, Redirect } from 'react-router-dom';
-import { read, update } from './api-product';
+import { makeStyles } from '@material-ui/styles';
 import auth from '../auth/auth-helper';
+import { read, update } from './api-product';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   card: {
     margin: 'auto',
     textAlign: 'center',
@@ -32,8 +32,8 @@ const styles = (theme) => ({
     verticalAlign: 'middle',
   },
   textField: {
-    marginLeft: theme.spacing(),
-    marginRight: theme.spacing(),
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
     width: 400,
   },
   submit: {
@@ -51,24 +51,37 @@ const styles = (theme) => ({
   filename: {
     marginLeft: '10px',
   },
-});
+}));
 
-class EditProduct extends Component {
-  constructor(props) {
-    super(props);
+function EditProduct({ match }) {
+  const classes = useStyles();
+  const [values, setValues] = useState({
+    name: '',
+    description: '',
+    image: '',
+    category: '',
+    quantity: '',
+    price: '',
+    redirect: false,
+    error: '',
+  });
 
-    this.state = {};
-  }
+  const jwt = auth.isAuthenticated();
 
-  componentDidMount = () => {
-    this.productData = new FormData();
-    read({
-      productId: this.props.match.params.productId,
-    }).then((data) => {
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+    read(
+      {
+        productId: match.params.productId,
+      },
+      signal,
+    ).then((data) => {
       if (data.error) {
-        this.setState({ error: data.error });
+        setValues({ ...values, error: data.error });
       } else {
-        this.setState({
+        setValues({
+          ...values,
           id: data._id,
           name: data.name,
           description: data.description,
@@ -78,173 +91,179 @@ class EditProduct extends Component {
         });
       }
     });
-  };
+    return function cleanup() {
+      abortController.abort();
+    };
+  }, []);
 
-  clickSubmit = () => {
-    const jwt = auth.isAuthenticated();
+  const clickSubmit = () => {
+    const productData = new FormData();
+    values.name && productData.append('name', values.name);
+    values.description
+      && productData.append('description', values.description);
+    values.image
+      && productData.append('image', values.image);
+    values.category
+      && productData.append('category', values.category);
+    values.quantity
+      && productData.append('quantity', values.quantity);
+    values.price
+      && productData.append('price', values.price);
+
     update(
       {
-        shopId: this.props.match.params.shopId,
-        productId: this.props.match.params.productId,
+        shopId: match.params.shopId,
+        productId: match.params.productId,
       },
       {
         t: jwt.token,
       },
-      this.productData,
+      productData,
     ).then((data) => {
       if (data.error) {
-        this.setState({ error: data.error });
+        setValues({ ...values, error: data.error });
       } else {
-        this.setState({ redirect: true });
-        this.productData.remove('image');
+        setValues({ ...values, redirect: true });
       }
     });
   };
 
-  handleChange = (name) => (event) => {
+  const handleChange = (name) => (event) => {
     const value = name === 'image'
       ? event.target.files[0]
       : event.target.value;
-    this.productData.set(name, value);
-    this.setState({ [name]: value });
+    setValues({ ...values, [name]: value });
   };
 
-  render() {
-    const imageUrl = this.state.id
-      ? `/api/product/image/${
-        this.state.id
-      }?${new Date().getTime()}`
-      : '/api/product/defaultphoto';
-    if (this.state.redirect) {
-      return (
-        <Redirect
-          to={`/seller/shop/edit/${this.props.match.params.shopId}`}
-        />
-      );
-    }
-    const { classes } = this.props;
+  const imageUrl = values.id
+    ? `/api/product/image/${
+      values.id
+    }?${new Date().getTime()}`
+    : '/api/product/defaultphoto';
 
+  if (values.redirect) {
     return (
-      <div>
-        <Card className={classes.card}>
-          <CardContent>
-            <Typography
-              type="headline"
-              component="h2"
-              className={classes.title}
-            >
-              Edit Product
-            </Typography>
-            <br />
-            <Avatar
-              src={imageUrl}
-              className={classes.bigAvatar}
-            />
-            <br />
-            <input
-              accept="image/*"
-              onChange={this.handleChange('image')}
-              className={classes.input}
-              id="icon-button-file"
-              type="file"
-            />
-            <label htmlFor="icon-button-file">
-              <Button
-                variant="contained"
-                color="secondary"
-                component="span"
-              >
-                Change Image
-                <FileUpload />
-              </Button>
-            </label>
-            <span className={classes.filename}>
-              {this.state.image
-                ? this.state.image.name
-                : ''}
-            </span>
-            <br />
-            <TextField
-              id="name"
-              label="Name"
-              className={classes.textField}
-              value={this.state.name}
-              onChange={this.handleChange('name')}
-              margin="normal"
-            />
-            <br />
-            <TextField
-              id="multiline-flexible"
-              label="Description"
-              multiline
-              rows="3"
-              value={this.state.description}
-              onChange={this.handleChange('description')}
-              className={classes.textField}
-              margin="normal"
-            />
-            <br />
-            <TextField
-              id="category"
-              label="Category"
-              className={classes.textField}
-              value={this.state.category}
-              onChange={this.handleChange('category')}
-              margin="normal"
-            />
-            <br />
-            <TextField
-              id="quantity"
-              label="Quantity"
-              className={classes.textField}
-              value={this.state.quantity}
-              onChange={this.handleChange('quantity')}
-              type="number"
-              margin="normal"
-            />
-            <br />
-            <TextField
-              id="price"
-              label="Price"
-              className={classes.textField}
-              value={this.state.price}
-              onChange={this.handleChange('price')}
-              type="number"
-              margin="normal"
-            />
-            <br />
-            {this.state.error && (
-              <Typography component="p" color="error">
-                <Icon
-                  color="error"
-                  className={classes.error}
-                >
-                  error
-                </Icon>
-                {this.state.error}
-              </Typography>
-            )}
-          </CardContent>
-          <CardActions>
-            <Button
-              color="primary"
-              variant="contained"
-              onClick={this.clickSubmit}
-              className={classes.submit}
-            >
-              Update
-            </Button>
-            <Link
-              to={`/seller/shops/edit/${this.props.match.params.shopId}`}
-              className={classes.submit}
-            >
-              <Button variant="contained">Cancel</Button>
-            </Link>
-          </CardActions>
-        </Card>
-      </div>
+      <Redirect
+        to={`/seller/shop/edit/${match.params.shopId}`}
+      />
     );
   }
+
+  return (
+    <div>
+      <Card className={classes.card}>
+        <CardContent>
+          <Typography
+            type="headline"
+            component="h2"
+            className={classes.title}
+          >
+            Edit Product
+          </Typography>
+          <br />
+          <Avatar
+            src={imageUrl}
+            className={classes.bigAvatar}
+          />
+          <br />
+          <input
+            accept="image/*"
+            onChange={handleChange('image')}
+            className={classes.input}
+            id="icon-button-file"
+            type="file"
+          />
+          <label htmlFor="icon-button-file">
+            <Button
+              variant="contained"
+              color="secondary"
+              component="span"
+            >
+              Change Image
+              <FileUpload />
+            </Button>
+          </label>{' '}
+          <span className={classes.filename}>
+            {values.image ? values.image.name : ''}
+          </span>
+          <br />
+          <TextField
+            id="name"
+            label="Name"
+            className={classes.textField}
+            value={values.name}
+            onChange={handleChange('name')}
+            margin="normal"
+          />
+          <br />
+          <TextField
+            id="multiline-flexible"
+            label="Description"
+            multiline
+            rows="3"
+            value={values.description}
+            onChange={handleChange('description')}
+            className={classes.textField}
+            margin="normal"
+          />
+          <br />
+          <TextField
+            id="category"
+            label="Category"
+            className={classes.textField}
+            value={values.category}
+            onChange={handleChange('category')}
+            margin="normal"
+          />
+          <br />
+          <TextField
+            id="quantity"
+            label="Quantity"
+            className={classes.textField}
+            value={values.quantity}
+            onChange={handleChange('quantity')}
+            type="number"
+            margin="normal"
+          />
+          <br />
+          <TextField
+            id="price"
+            label="Price"
+            className={classes.textField}
+            value={values.price}
+            onChange={handleChange('price')}
+            type="number"
+            margin="normal"
+          />
+          <br />
+          {values.error && (
+            <Typography component="p" color="error">
+              <Icon color="error" className={classes.error}>
+                error
+              </Icon>
+              {values.error}
+            </Typography>
+          )}
+        </CardContent>
+        <CardActions>
+          <Button
+            color="primary"
+            variant="contained"
+            onClick={clickSubmit}
+            className={classes.submit}
+          >
+            Update
+          </Button>
+          <Link
+            to={`/seller/shops/edit/${match.params.shopId}`}
+            className={classes.submit}
+          >
+            <Button variant="contained">Cancel</Button>
+          </Link>
+        </CardActions>
+      </Card>
+    </div>
+  );
 }
 
-export default withStyles(styles)(EditProduct);
+export default EditProduct;
