@@ -1,6 +1,5 @@
-/* eslint-disable react/prop-types,react/no-array-index-key */
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
+/* eslint-disable react/no-array-index-key */
+import React, { useEffect, useState } from 'react';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
@@ -9,11 +8,12 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import { ExpandLess, ExpandMore } from '@material-ui/icons';
 import Collapse from '@material-ui/core/Collapse';
-import { listByShop } from './api-order';
-import auth from '../auth/auth-helper';
+import { makeStyles } from '@material-ui/styles';
 import ProductOrderEdit from './productOrderEdit';
+import auth from '../auth/auth-helper';
+import { listByShop } from './api-order';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   root: theme.mixins.gutters({
     maxWidth: 600,
     margin: 'auto',
@@ -23,12 +23,12 @@ const styles = (theme) => ({
   title: {
     margin: `${theme.spacing(3)}px 0 ${theme.spacing(
       3,
-    )}px ${theme.spacing()}px`,
+    )}px ${theme.spacing(1)}px`,
     color: theme.palette.protectedTitle,
     fontSize: '1.2em',
   },
   subheading: {
-    marginTop: theme.spacing(),
+    marginTop: theme.spacing(1),
     color: '#434b4e',
     fontSize: '1.1em',
   },
@@ -37,142 +37,130 @@ const styles = (theme) => ({
     paddingTop: '16px',
     backgroundColor: '#f8f8f8',
   },
-});
+}));
 
-class ShopOrders extends Component {
-  constructor(props) {
-    super(props);
+function ShopOrders({ match }) {
+  const classes = useStyles();
+  const [orders, setOrders] = useState([]);
+  const [open, setOpen] = useState(0);
 
-    this.state = {
-      open: 0,
-      orders: [],
-    };
-  }
+  const jwt = auth.isAuthenticated();
 
-  loadOrders = () => {
-    const jwt = auth.isAuthenticated();
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
     listByShop(
       {
-        shopId: this.props.match.params.shopId,
+        shopId: match.params.shopId,
       },
       { t: jwt.token },
+      signal,
     ).then((data) => {
       if (data.error) {
         console.log(data);
       } else {
-        this.setState({ orders: data });
+        setOrders(data);
       }
     });
+    return function cleanup() {
+      abortController.abort();
+    };
+  }, []);
+
+  const handleClick = (index) => () => {
+    setOpen(index);
   };
 
-  componentDidMount = () => {
-    this.loadOrders();
+  const updateOrders = (index, updatedOrder) => {
+    const updatedOrders = orders;
+    updatedOrders[index] = updatedOrder;
+    setOrders([...updatedOrders]);
   };
 
-  handleClick = (index) => {
-    this.setState({ open: index });
-  };
-
-  updateOrders = (index, updatedOrder) => {
-    const { orders } = this.state;
-    orders[index] = updatedOrder;
-    this.setState({ orders });
-  };
-
-  render() {
-    const { classes } = this.props;
-
-    return (
-      <div>
-        <Paper className={classes.root} elevation={4}>
-          <Typography
-            type="title"
-            className={classes.title}
-          >
-            Orders in {this.props.match.params.shop}
-          </Typography>
-          <List dense>
-            {this.state.orders.map((order, index) => (
-              <span key={index}>
-                <ListItem
-                  button
-                  onClick={() => this.handleClick(index)}
-                >
-                  <ListItemText
-                    primary={`Order # ${order._id}`}
-                    secondary={new Date(
-                      order.created,
-                    ).toDateString()}
-                  />
-                  {this.state.open == index ? (
-                    <ExpandLess />
-                  ) : (
-                    <ExpandMore />
-                  )}
-                </ListItem>
-                <Divider />
-                <Collapse
-                  component="li"
-                  in={this.state.open == index}
-                  timeout="auto"
-                  unmountOnExit
-                >
-                  <ProductOrderEdit
-                    shopId={this.props.match.params.shopId}
-                    order={order}
-                    orderIndex={index}
-                    updateOrders={this.updateOrders}
-                  />
-                  <div className={classes.customerDetails}>
-                    <Typography
-                      type="subheading"
-                      component="h3"
-                      className={classes.subheading}
-                    >
-                      Deliver to:
-                    </Typography>
-                    <Typography
-                      type="subheading"
-                      component="h3"
-                      color="primary"
-                    >
-                      <strong>{order.customer_name}</strong>{' '}
-                      ({order.customer_email})
-                    </Typography>
-                    <Typography
-                      type="subheading"
-                      component="h3"
-                      color="primary"
-                    >
-                      {order.delivery_address.street}
-                    </Typography>
-                    <Typography
-                      type="subheading"
-                      component="h3"
-                      color="primary"
-                    >
-                      {order.delivery_address.city},{' '}
-                      {order.delivery_address.state}{' '}
-                      {order.delivery_address.zipcode}
-                    </Typography>
-                    <Typography
-                      type="subheading"
-                      component="h3"
-                      color="primary"
-                    >
-                      {order.delivery_address.country}
-                    </Typography>
-                    <br />
-                  </div>
-                </Collapse>
-                <Divider />
-              </span>
-            ))}
-          </List>
-        </Paper>
-      </div>
-    );
-  }
+  return (
+    <div>
+      <Paper className={classes.root} elevation={4}>
+        <Typography type="title" className={classes.title}>
+          Orders in {match.params.shop}
+        </Typography>
+        <List dense>
+          {orders.map((order, index) => (
+            <span key={index}>
+              <ListItem button onClick={handleClick(index)}>
+                <ListItemText
+                  primary={`Order # ${order._id}`}
+                  secondary={new Date(
+                    order.created,
+                  ).toDateString()}
+                />
+                {open == index ? (
+                  <ExpandLess />
+                ) : (
+                  <ExpandMore />
+                )}
+              </ListItem>
+              <Divider />
+              <Collapse
+                component="li"
+                in={open == index}
+                timeout="auto"
+                unmountOnExit
+              >
+                <ProductOrderEdit
+                  shopId={match.params.shopId}
+                  order={order}
+                  orderIndex={index}
+                  updateOrders={updateOrders}
+                />
+                <div className={classes.customerDetails}>
+                  <Typography
+                    type="subheading"
+                    component="h3"
+                    className={classes.subheading}
+                  >
+                    Deliver to:
+                  </Typography>
+                  <Typography
+                    type="subheading"
+                    component="h3"
+                    color="primary"
+                  >
+                    <strong>{order.customer_name}</strong> (
+                    {order.customer_email})
+                  </Typography>
+                  <Typography
+                    type="subheading"
+                    component="h3"
+                    color="primary"
+                  >
+                    {order.delivery_address.street}
+                  </Typography>
+                  <Typography
+                    type="subheading"
+                    component="h3"
+                    color="primary"
+                  >
+                    {order.delivery_address.city},{' '}
+                    {order.delivery_address.state}{' '}
+                    {order.delivery_address.zipcode}
+                  </Typography>
+                  <Typography
+                    type="subheading"
+                    component="h3"
+                    color="primary"
+                  >
+                    {order.delivery_address.country}
+                  </Typography>
+                  <br />
+                </div>
+              </Collapse>
+              <Divider />
+            </span>
+          ))}
+        </List>
+      </Paper>
+    </div>
+  );
 }
 
-export default withStyles(styles)(ShopOrders);
+export default ShopOrders;

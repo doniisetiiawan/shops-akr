@@ -1,6 +1,5 @@
-/* eslint-disable react/prop-types,react/no-array-index-key */
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
+/* eslint-disable react/no-array-index-key */
+import React, { useEffect, useState } from 'react';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -8,15 +7,13 @@ import ListItemText from '@material-ui/core/ListItemText';
 import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
 import Divider from '@material-ui/core/Divider';
+import { makeStyles } from '@material-ui/styles';
 import auth from '../auth/auth-helper';
 import {
-  cancelProduct,
-  getStatusValues,
-  processCharge,
-  update,
+  cancelProduct, getStatusValues, processCharge, update,
 } from './api-order';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   nested: {
     paddingLeft: theme.spacing(4),
     paddingBottom: 0,
@@ -44,46 +41,53 @@ const styles = (theme) => ({
     right: '5px',
     padding: '5px',
   },
-});
+}));
 
-class ProductOrderEdit extends Component {
-  constructor(props) {
-    super(props);
+function ProductOrderEdit(props) {
+  const classes = useStyles();
+  const [values, setValues] = useState({
+    open: 0,
+    statusValues: [],
+    error: '',
+  });
+  const jwt = auth.isAuthenticated();
 
-    this.state = {
-      open: 0,
-      statusValues: [],
-      error: '',
-    };
-  }
-
-  loadStatusValues = () => {
-    getStatusValues().then((data) => {
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+    getStatusValues(signal).then((data) => {
       if (data.error) {
-        this.setState({ error: 'Could not get status' });
+        setValues({
+          ...values,
+          error: 'Could not get status',
+        });
       } else {
-        this.setState({ statusValues: data, error: '' });
+        setValues({
+          ...values,
+          statusValues: data,
+          error: '',
+        });
       }
     });
-  };
+    return function cleanup() {
+      abortController.abort();
+    };
+  }, []);
 
-  componentDidMount = () => {
-    this.loadStatusValues();
-  };
-
-  handleStatusChange = (productIndex) => (event) => {
-    const { order } = this.props;
+  const handleStatusChange = (productIndex) => (event) => {
+    const { order } = props;
     order.products[productIndex].status = event.target.value;
     const product = order.products[productIndex];
-    const jwt = auth.isAuthenticated();
 
     if (event.target.value == 'Cancelled') {
       cancelProduct(
         {
-          shopId: this.props.shopId,
+          shopId: props.shopId,
           productId: product.product._id,
         },
-        { t: jwt.token },
+        {
+          t: jwt.token,
+        },
         {
           cartItemId: product._id,
           status: event.target.value,
@@ -91,25 +95,28 @@ class ProductOrderEdit extends Component {
         },
       ).then((data) => {
         if (data.error) {
-          this.setState({
+          setValues({
+            ...values,
             error: 'Status not updated, try again',
           });
         } else {
-          this.props.updateOrders(
-            this.props.orderIndex,
-            order,
-          );
-          this.setState({ error: '' });
+          props.updateOrders(props.orderIndex, order);
+          setValues({
+            ...values,
+            error: '',
+          });
         }
       });
     } else if (event.target.value == 'Processing') {
       processCharge(
         {
           userId: jwt.user._id,
-          shopId: this.props.shopId,
+          shopId: props.shopId,
           orderId: order._id,
         },
-        { t: jwt.token },
+        {
+          t: jwt.token,
+        },
         {
           cartItemId: product._id,
           status: event.target.value,
@@ -117,120 +124,111 @@ class ProductOrderEdit extends Component {
         },
       ).then((data) => {
         if (data.error) {
-          this.setState({
+          setValues({
+            ...values,
             error: 'Status not updated, try again',
           });
         } else {
-          this.props.updateOrders(
-            this.props.orderIndex,
-            order,
-          );
-          this.setState({ error: '' });
+          props.updateOrders(props.orderIndex, order);
+          setValues({
+            ...values,
+            error: '',
+          });
         }
       });
     } else {
       update(
         {
-          shopId: this.props.shopId,
+          shopId: props.shopId,
         },
-        { t: jwt.token },
+        {
+          t: jwt.token,
+        },
         {
           cartItemId: product._id,
           status: event.target.value,
         },
       ).then((data) => {
         if (data.error) {
-          this.setState({
+          setValues({
+            ...values,
             error: 'Status not updated, try again',
           });
         } else {
-          this.props.updateOrders(
-            this.props.orderIndex,
-            order,
-          );
-          this.setState({ error: '' });
+          props.updateOrders(props.orderIndex, order);
+          setValues({
+            ...values,
+            error: '',
+          });
         }
       });
     }
   };
 
-  render() {
-    const { classes } = this.props;
-    return (
-      <>
-        <Typography
-          component="span"
-          color="error"
-          className={classes.statusMessage}
-        >
-          {this.state.error}
-        </Typography>
-        <List
-          disablePadding
-          style={{ backgroundColor: '#f8f8f8' }}
-        >
-          {this.props.order.products.map((item, index) => (
-            <span key={index}>
-              {item.shop == this.props.shopId && (
-                <ListItem button className={classes.nested}>
-                  <ListItemText
-                    primary={(
-                      <div>
-                        <img
-                          className={classes.listImg}
-                          src={`/api/product/image/${item.product._id}`}
-                          alt="product"
-                        />
-                        <div
-                          className={classes.listDetails}
-                        >
-                          {item.product.name}
-                          <p
-                            className={classes.listQty}
-                          >{`Quantity: ${item.quantity}`}
-                          </p>
-                        </div>
+  return (
+    <div>
+      <Typography
+        component="span"
+        color="error"
+        className={classes.statusMessage}
+      >
+        {values.error}
+      </Typography>
+      <List
+        disablePadding
+        style={{ backgroundColor: '#f8f8f8' }}
+      >
+        {props.order.products.map((item, index) => (
+          <span key={index}>
+            {item.shop == props.shopId && (
+              <ListItem button className={classes.nested}>
+                <ListItemText
+                  primary={(
+                    <div>
+                      <img
+                        className={classes.listImg}
+                        src={`/api/product/image/${item.product._id}`}
+                        alt="product"
+                      />
+                      <div className={classes.listDetails}>
+                        {item.product.name}
+                        <p className={classes.listQty}>
+                          {`Quantity: ${item.quantity}`}
+                        </p>
                       </div>
-                    )}
-                  />
-                  <TextField
-                    id="select-status"
-                    select
-                    label="Update Status"
-                    className={classes.textField}
-                    value={item.status}
-                    onChange={this.handleStatusChange(
-                      index,
-                    )}
-                    SelectProps={{
-                      MenuProps: {
-                        className: classes.menu,
-                      },
-                    }}
-                    margin="normal"
-                  >
-                    {this.state.statusValues.map(
-                      (option) => (
-                        <MenuItem
-                          key={option}
-                          value={option}
-                        >
-                          {option}
-                        </MenuItem>
-                      ),
-                    )}
-                  </TextField>
-                </ListItem>
-              )}
-              <Divider
-                style={{ margin: 'auto', width: '80%' }}
-              />
-            </span>
-          ))}
-        </List>
-      </>
-    );
-  }
+                    </div>
+                  )}
+                />
+                <TextField
+                  id="select-status"
+                  select
+                  label="Update Status"
+                  className={classes.textField}
+                  value={item.status}
+                  onChange={handleStatusChange(index)}
+                  SelectProps={{
+                    MenuProps: {
+                      className: classes.menu,
+                    },
+                  }}
+                  margin="normal"
+                >
+                  {values.statusValues.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </ListItem>
+            )}
+            <Divider
+              style={{ margin: 'auto', width: '80%' }}
+            />
+          </span>
+        ))}
+      </List>
+    </div>
+  );
 }
 
-export default withStyles(styles)(ProductOrderEdit);
+export default ProductOrderEdit;
