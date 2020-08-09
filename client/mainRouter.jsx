@@ -19,6 +19,11 @@ import EditProduct from './product/editProduct';
 import Cart from './cart/cart';
 import ShopOrders from './order/shopOrders';
 import Order from './order/order';
+import NewAuction from './auction/newAuction';
+import Auction from './auction/auction';
+import MyAuctions from './auction/myAuctions';
+import EditAuction from './auction/editAuction';
+import OpenAuctions from './auction/openAuctions';
 
 function MainRouter() {
   return (
@@ -68,6 +73,27 @@ function MainRouter() {
         <PrivateRoute
           path="/seller/:shopId/:productId/edit"
           component={EditProduct}
+        />
+
+        <PrivateRoute
+          path="/myauctions"
+          component={MyAuctions}
+        />
+        <PrivateRoute
+          path="/auction/new"
+          component={NewAuction}
+        />
+        <PrivateRoute
+          path="/auction/edit/:auctionId"
+          component={EditAuction}
+        />
+        <Route
+          path="/auction/:auctionId"
+          component={Auction}
+        />
+        <Route
+          path="/auctions/all"
+          component={OpenAuctions}
         />
       </Switch>
     </>

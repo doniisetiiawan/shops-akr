@@ -44,12 +44,19 @@ function Menu({ history }) {
               All Shops
             </Button>
           </Link>
+          <Link to="/auctions/all">
+            <Button
+              style={isActive(history, '/auctions/all')}
+            >
+              All Auctions
+            </Button>
+          </Link>
           <Link to="/cart">
             <Button style={isActive(history, '/cart')}>
               Cart
               <Badge
-                color="secondary"
                 invisible={false}
+                color="secondary"
                 badgeContent={cart.itemTotal()}
                 style={{ marginLeft: '7px' }}
               >
@@ -83,16 +90,28 @@ function Menu({ history }) {
             {auth.isAuthenticated() && (
               <span>
                 {auth.isAuthenticated().user.seller && (
-                  <Link to="/seller/shops">
-                    <Button
-                      style={isPartActive(
-                        history,
-                        '/seller/',
-                      )}
-                    >
-                      My Shops
-                    </Button>
-                  </Link>
+                  <>
+                    <Link to="/seller/shops">
+                      <Button
+                        style={isPartActive(
+                          history,
+                          '/seller/',
+                        )}
+                      >
+                        My Shops
+                      </Button>
+                    </Link>
+                    <Link to="/myauctions">
+                      <Button
+                        style={isPartActive(
+                          history,
+                          '/myauctions',
+                        )}
+                      >
+                        My Auctions
+                      </Button>
+                    </Link>
+                  </>
                 )}
                 <Link
                   to={`/user/${
