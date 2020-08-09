@@ -1,11 +1,14 @@
 /* eslint-disable react/no-array-index-key */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/styles';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
+import io from 'socket.io-client';
 import auth from '../auth/auth-helper';
+
+const socket = io();
 
 const useStyles = makeStyles(() => ({
   bidHistory: {
@@ -30,11 +33,41 @@ function Bidding(props) {
   const classes = useStyles();
   const [bid, setBid] = useState('');
 
+  useEffect(() => {
+    socket.emit('join auction room', {
+      room: props.auction._id,
+    });
+    return () => {
+      socket.emit('leave auction room', {
+        room: props.auction._id,
+      });
+    };
+  }, []);
+
+  useEffect(() => {
+    socket.on('new bid', (payload) => {
+      props.updateBids(payload);
+    });
+    return () => {
+      socket.off('new bid');
+    };
+  });
+
   const handleChange = (event) => {
     setBid(event.target.value);
   };
 
   const placeBid = () => {
+    const jwt = auth.isAuthenticated();
+    const newBid = {
+      bid,
+      time: new Date(),
+      bidder: jwt.user,
+    };
+    socket.emit('new bid', {
+      room: props.auction._id,
+      bidInfo: newBid,
+    });
     setBid('');
   };
 
