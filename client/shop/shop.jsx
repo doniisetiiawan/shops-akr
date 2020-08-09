@@ -1,16 +1,15 @@
-/* eslint-disable react/prop-types */
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
 import Avatar from '@material-ui/core/Avatar';
-import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Card from '@material-ui/core/Card';
-import { read } from './api-shop';
+import { makeStyles } from '@material-ui/styles';
 import Products from '../product/products';
 import { listByShop } from '../product/api-product';
+import { read } from './api-shop';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
     margin: 30,
@@ -25,7 +24,7 @@ const styles = (theme) => ({
     fontSize: '1.2em',
   },
   subheading: {
-    marginTop: theme.spacing(),
+    marginTop: theme.spacing(1),
     color: theme.palette.openTitle,
   },
   bigAvatar: {
@@ -36,104 +35,127 @@ const styles = (theme) => ({
   productTitle: {
     padding: `${theme.spacing(3)}px ${theme.spacing(
       2.5,
-    )}px ${theme.spacing()}px ${theme.spacing(2)}px`,
+    )}px ${theme.spacing(1)}px ${theme.spacing(2)}px`,
     color: theme.palette.openTitle,
     width: '100%',
     fontSize: '1.2em',
   },
-});
+}));
 
-class Shop extends Component {
-  constructor(props) {
-    super(props);
+function Shop({ match }) {
+  const classes = useStyles();
+  const [shop, setShop] = useState('');
+  const [products, setProducts] = useState([]);
+  const [error, setError] = useState('');
 
-    this.state = {
-      shop: '',
-      products: [],
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+
+    listByShop(
+      {
+        shopId: match.params.shopId,
+      },
+      signal,
+    ).then((data) => {
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setProducts(data);
+      }
+    });
+    read(
+      {
+        shopId: match.params.shopId,
+      },
+      signal,
+    ).then((data) => {
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setShop(data);
+      }
+    });
+
+    return function cleanup() {
+      abortController.abort();
     };
-  }
+  }, [match.params.shopId]);
 
-  loadProducts = () => {
-    listByShop({
-      shopId: this.props.match.params.shopId,
-    }).then((data) => {
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+
+    listByShop(
+      {
+        shopId: match.params.shopId,
+      },
+      signal,
+    ).then((data) => {
       if (data.error) {
-        this.setState({ error: data.error });
+        setError(data.error);
       } else {
-        this.setState({ products: data });
+        setProducts(data);
       }
     });
-  };
 
-  componentDidMount = () => {
-    this.loadProducts();
-    read({
-      shopId: this.props.match.params.shopId,
-    }).then((data) => {
-      if (data.error) {
-        this.setState({ error: data.error });
-      } else {
-        this.setState({ shop: data });
-      }
-    });
-  };
+    return function cleanup() {
+      abortController.abort();
+    };
+  }, [match.params.shopId]);
 
-  render() {
-    const logoUrl = this.state.shop._id
-      ? `/api/shops/logo/${
-        this.state.shop._id
-      }?${new Date().getTime()}`
-      : '/api/shops/defaultphoto';
-    const { classes } = this.props;
+  const logoUrl = shop._id
+    ? `/api/shops/logo/${shop._id}?${new Date().getTime()}`
+    : '/api/shops/defaultphoto';
 
-    return (
-      <div className={classes.root}>
-        <Grid container spacing={1}>
-          <Grid item xs={4} sm={4}>
-            <Card className={classes.card}>
-              <CardContent>
-                <Typography
-                  type="headline"
-                  component="h2"
-                  className={classes.title}
-                >
-                  {this.state.shop.name}
-                </Typography>
-                <br />
-                <Avatar
-                  src={logoUrl}
-                  className={classes.bigAvatar}
-                />
-                <br />
-                <Typography
-                  type="subheading"
-                  component="h2"
-                >
-                  {this.state.shop.description}
-                </Typography>
-                <br />
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={8} sm={8}>
-            <Card>
+  return (
+    <div className={classes.root}>
+      <Grid container spacing={8}>
+        <Grid item xs={4} sm={4}>
+          <Card className={classes.card}>
+            <CardContent>
               <Typography
-                type="title"
+                type="headline"
                 component="h2"
-                className={classes.productTitle}
+                className={classes.title}
               >
-                Products
+                {shop.name}
               </Typography>
-              <Products
-                products={this.state.products}
-                searched={false}
+              <br />
+              <Avatar
+                src={logoUrl}
+                className={classes.bigAvatar}
               />
-            </Card>
-          </Grid>
+              <br />
+              <Typography
+                type="subheading"
+                component="h2"
+                className={classes.subheading}
+              >
+                {shop.description}
+              </Typography>
+              <br />
+            </CardContent>
+          </Card>
         </Grid>
-      </div>
-    );
-  }
+        <Grid item xs={8} sm={8}>
+          <Card>
+            <Typography
+              type="title"
+              component="h2"
+              className={classes.productTitle}
+            >
+              Products
+            </Typography>
+            <Products
+              products={products}
+              searched={false}
+            />
+          </Card>
+        </Grid>
+      </Grid>
+    </div>
+  );
 }
 
-export default withStyles(styles)(Shop);
+export default Shop;

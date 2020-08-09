@@ -1,5 +1,5 @@
-/* eslint-disable react/no-array-index-key,react/prop-types */
-import React, { Component } from 'react';
+/* eslint-disable react/no-array-index-key */
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Divider from '@material-ui/core/Divider';
 import ListItem from '@material-ui/core/ListItem';
@@ -7,11 +7,11 @@ import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
-import { withStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
+import { makeStyles } from '@material-ui/styles';
 import { list } from './api-shop';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   root: theme.mixins.gutters({
     maxWidth: 600,
     margin: 'auto',
@@ -39,79 +39,56 @@ const styles = (theme) => ({
   details: {
     padding: '24px',
   },
-});
+}));
 
-class Shops extends Component {
-  constructor(props) {
-    super(props);
+function Shops() {
+  const classes = useStyles();
+  const [shops, setShops] = useState([]);
 
-    this.state = {
-      shops: [],
-    };
-  }
-
-  loadShops = () => {
-    list().then((data) => {
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+    list(signal).then((data) => {
       if (data.error) {
         console.log(data.error);
       } else {
-        this.setState({ shops: data });
+        setShops(data);
       }
     });
-  };
-
-  componentDidMount = () => {
-    this.loadShops();
-  };
-
-  render() {
-    const { classes } = this.props;
-
-    return (
-      <>
-        <Paper className={classes.root} elevation={4}>
-          <Typography
-            type="title"
-            className={classes.title}
-          >
-            All Shops
-          </Typography>
-          <List dense>
-            {this.state.shops.map((shop, i) => (
-              <Link to={`/shops/${shop._id}`} key={i}>
-                <Divider />
-                <ListItem button>
-                  <ListItemAvatar>
-                    <Avatar
-                      src={`/api/shops/logo/${
-                        shop._id
-                      }?${new Date().getTime()}`}
-                    />
-                  </ListItemAvatar>
-                  <div>
-                    <Typography
-                      type="headline"
-                      component="h2"
-                      color="primary"
-                    >
-                      {shop.name}
-                    </Typography>
-                    <Typography
-                      type="subheading"
-                      component="h4"
-                    >
-                      {shop.description}
-                    </Typography>
-                  </div>
-                </ListItem>
-                <Divider />
-              </Link>
-            ))}
-          </List>
-        </Paper>
-      </>
-    );
-  }
+    return function cleanup() {
+      abortController.abort();
+    };
+  }, []);
+  return (
+    <div>
+      <Paper className={classes.root} elevation={4}>
+        <Typography type="title" className={classes.title}>
+          All Shops
+        </Typography>
+        <List dense>
+          {shops.map((shop, i) => (
+            <Link to={`/shops/${shop._id}`} key={i}>
+              <Divider />
+              <ListItem button>
+                <ListItemAvatar>
+                  <Avatar className={classes.avatar} src={`/api/shops/logo/${shop._id}?${new Date().getTime()}`} />
+                </ListItemAvatar>
+                <div className={classes.details}>
+                  <Typography type="headline" component="h2" color="primary" className={classes.shopTitle}>
+                    {shop.name}
+                  </Typography>
+                  <Typography type="subheading" component="h4" className={classes.subheading}>
+                    {shop.description}
+                  </Typography>
+                </div>
+              </ListItem>
+              <Divider />
+            </Link>
+          ))}
+        </List>
+      </Paper>
+    </div>
+  );
 }
 
-export default withStyles(styles)(Shops);
+export default Shops;

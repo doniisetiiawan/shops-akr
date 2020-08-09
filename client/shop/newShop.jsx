@@ -1,6 +1,5 @@
-/* eslint-disable react/prop-types,jsx-a11y/label-has-associated-control */
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
+/* eslint-disable no-unused-expressions,jsx-a11y/label-has-associated-control */
+import React, { useState } from 'react';
 import Button from '@material-ui/core/Button';
 import { AttachFile as FileUpload } from '@material-ui/icons';
 import TextField from '@material-ui/core/TextField';
@@ -10,10 +9,11 @@ import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
 import Icon from '@material-ui/core/Icon';
 import CardActions from '@material-ui/core/CardActions';
+import { makeStyles } from '@material-ui/styles';
 import auth from '../auth/auth-helper';
 import { create } from './api-shop';
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   card: {
     maxWidth: 600,
     margin: 'auto',
@@ -30,8 +30,9 @@ const styles = (theme) => ({
     fontSize: '1em',
   },
   textField: {
-    marginLeft: theme.spacing(),
-    marginRight: theme.spacing(),
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
+    width: 300,
   },
   submit: {
     margin: 'auto',
@@ -43,35 +44,32 @@ const styles = (theme) => ({
   filename: {
     marginLeft: '10px',
   },
-});
+}));
 
-class NewShop extends Component {
-  constructor(props) {
-    super(props);
+function NewShop() {
+  const classes = useStyles();
+  const [values, setValues] = useState({
+    name: '',
+    description: '',
+    image: '',
+    redirect: false,
+    error: '',
+  });
+  const jwt = auth.isAuthenticated();
 
-    this.state = {
-      name: '',
-      description: '',
-      image: '',
-      redirect: false,
-      error: '',
-    };
-  }
-
-  componentDidMount = () => {
-    this.shopData = new FormData();
-  };
-
-  handleChange = (name) => (event) => {
+  const handleChange = (name) => (event) => {
     const value = name === 'image'
       ? event.target.files[0]
       : event.target.value;
-    this.shopData.set(name, value);
-    this.setState({ [name]: value });
+    setValues({ ...values, [name]: value });
   };
 
-  clickSubmit = () => {
-    const jwt = auth.isAuthenticated();
+  const clickSubmit = () => {
+    const shopData = new FormData();
+    values.name && shopData.append('name', values.name);
+    values.description
+      && shopData.append('description', values.description);
+    values.image && shopData.append('image', values.image);
     create(
       {
         userId: jwt.user._id,
@@ -79,104 +77,101 @@ class NewShop extends Component {
       {
         t: jwt.token,
       },
-      this.shopData,
+      shopData,
     ).then((data) => {
       if (data.error) {
-        this.setState({ error: data.error });
+        setValues({ ...values, error: data.error });
       } else {
-        this.setState({ error: '', redirect: true });
+        setValues({ ...values, error: '', redirect: true });
       }
     });
   };
 
-  render() {
-    if (this.state.redirect) {
-      return <Redirect to="/seller/shops" />;
-    }
-    const { classes } = this.props;
-
-    return (
-      <>
-        <Card className={classes.card}>
-          <CardContent>
-            <Typography
-              type="headline"
-              component="h2"
-              className={classes.title}
-            >
-              New Shop
-            </Typography>
-            <br />
-            <input
-              accept="image/*"
-              onChange={this.handleChange('image')}
-              className={classes.input}
-              id="icon-button-file"
-              type="file"
-            />
-            <label htmlFor="icon-button-file">
-              <Button
-                raised
-                color="secondary"
-                component="span"
-              >
-                Upload Logo <FileUpload />
-              </Button>
-            </label>
-            <span>
-              {this.state.image
-                ? this.state.image.name
-                : ''}
-            </span>
-            <br />
-            <TextField
-              id="name"
-              label="Name"
-              value={this.state.name}
-              onChange={this.handleChange('name')}
-            />
-            <br />
-            <TextField
-              id="multiline-flexible"
-              label="Description"
-              multiline
-              rows="2"
-              value={this.state.description}
-              onChange={this.handleChange('description')}
-            />
-            <br />
-            {this.state.error && (
-              <Typography component="p" color="error">
-                <Icon
-                  color="error"
-                  className={classes.error}
-                >
-                  error
-                </Icon>
-                {this.state.error}
-              </Typography>
-            )}
-          </CardContent>
-          <CardActions>
-            <Button
-              color="primary"
-              variant="contained"
-              onClick={this.clickSubmit}
-              className={classes.submit}
-            >
-              Submit
-            </Button>
-            <Link
-              to="/seller/shops"
-              className={classes.submit}
-            >
-              <Button variant="contained">Cancel</Button>
-            </Link>
-          </CardActions>
-        </Card>
-      </>
-    );
+  if (values.redirect) {
+    return <Redirect to="/seller/shops" />;
   }
+
+  return (
+    <div>
+      <Card className={classes.card}>
+        <CardContent>
+          <Typography
+            type="headline"
+            component="h2"
+            className={classes.title}
+          >
+            New Shop
+          </Typography>
+          <br />
+          <input
+            accept="image/*"
+            onChange={handleChange('image')}
+            className={classes.input}
+            id="icon-button-file"
+            type="file"
+          />
+          <label htmlFor="icon-button-file">
+            <Button
+              variant="contained"
+              color="secondary"
+              component="span"
+            >
+              Upload Logo
+              <FileUpload />
+            </Button>
+          </label>{' '}
+          <span className={classes.filename}>
+            {values.image ? values.image.name : ''}
+          </span>
+          <br />
+          <TextField
+            id="name"
+            label="Name"
+            className={classes.textField}
+            value={values.name}
+            onChange={handleChange('name')}
+            margin="normal"
+          />
+          <br />
+          <TextField
+            id="multiline-flexible"
+            label="Description"
+            multiline
+            rows="2"
+            value={values.description}
+            onChange={handleChange('description')}
+            className={classes.textField}
+            margin="normal"
+          />
+          <br />{' '}
+          {values.error && (
+            <Typography component="p" color="error">
+              <Icon color="error" className={classes.error}>
+                error
+              </Icon>
+              {values.error}
+            </Typography>
+          )}
+        </CardContent>
+        <CardActions>
+          <Button
+            color="primary"
+            variant="contained"
+            onClick={clickSubmit}
+            className={classes.submit}
+          >
+            Submit
+          </Button>
+          <Link
+            to="/seller/shops"
+            className={classes.submit}
+          >
+            <Button variant="contained">Cancel</Button>
+          </Link>
+        </CardActions>
+      </Card>
+    </div>
+  );
 }
 
-export default withStyles(styles)(NewShop);
+export default NewShop;

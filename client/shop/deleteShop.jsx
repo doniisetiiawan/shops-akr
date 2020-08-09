@@ -1,5 +1,4 @@
-/* eslint-disable react/prop-types */
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import IconButton from '@material-ui/core/IconButton';
 import { Delete as DeleteIcon } from '@material-ui/icons';
 import Dialog from '@material-ui/core/Dialog';
@@ -11,85 +10,70 @@ import Button from '@material-ui/core/Button';
 import auth from '../auth/auth-helper';
 import { remove } from './api-shop';
 
-class DeleteShop extends Component {
-  constructor(props) {
-    super(props);
+function DeleteShop(props) {
+  const [open, setOpen] = useState(false);
 
-    this.state = {
-      open: false,
-    };
-  }
+  const jwt = auth.isAuthenticated();
 
-  clickButton = () => {
-    this.setState({ open: true });
-  }
+  const clickButton = () => {
+    setOpen(true);
+  };
 
-  deleteShop = () => {
-    const jwt = auth.isAuthenticated();
+  const deleteShop = () => {
     remove(
       {
-        shopId: this.props.shop._id,
+        shopId: props.shop._id,
       },
       { t: jwt.token },
     ).then((data) => {
       if (data.error) {
         console.log(data.error);
       } else {
-        this.setState({ open: false }, () => {
-          this.props.onRemove(this.props.shop);
-        });
+        setOpen(false);
+        props.onRemove(props.shop);
       }
     });
   };
 
-  handleRequestClose = () => {
-    this.setState({ open: false });
-  }
+  const handleRequestClose = () => {
+    setOpen(false);
+  };
 
-  render() {
-    return (
-      <>
-        <span>
-          <IconButton
-            aria-label="Delete"
-            onClick={this.clickButton}
+  return (
+    <span>
+      <IconButton
+        aria-label="Delete"
+        onClick={clickButton}
+        color="secondary"
+      >
+        <DeleteIcon />
+      </IconButton>
+
+      <Dialog open={open} onClose={handleRequestClose}>
+        <DialogTitle>{`Delete ${props.shop.name}`}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Confirm to delete your shop {props.shop.name}.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleRequestClose}
+            color="primary"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={deleteShop}
             color="secondary"
+            autoFocus="autoFocus"
           >
-            <DeleteIcon />
-          </IconButton>
-          <Dialog
-            open={this.state.open}
-            onRequestClose={this.handleRequestClose}
-          >
-            <DialogTitle>
-              {`Delete ${this.props.shop.name}`}
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Confirm to delete your shop{' '}
-                {this.props.shop.name}.
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={this.handleRequestClose}
-                color="primary"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={this.deleteShop}
-                color="secondary"
-                autoFocus="autoFocus"
-              >
-                Confirm
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </span>
-      </>
-    );
-  }
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </span>
+  );
 }
 
 export default DeleteShop;
